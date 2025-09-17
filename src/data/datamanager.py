@@ -86,9 +86,13 @@ def train_val_test_split(data_frame: pd.DataFrame, shuffle=True):
     train_true, test_true = train_test_split(true, test_size=0.2, shuffle=shuffle)
     test_true, val_true = train_test_split(test_true, test_size=0.5, shuffle=shuffle)
 
-    train = train_false.append(train_true)
-    val = val_false.append(val_true)
-    test = test_false.append(test_true)
+    # train = train_false.append(train_true)
+    # train = pd.concat([train_false, train_true])
+    # val = val_false.append(val_true)
+    # test = test_false.append(test_true)
+    train = pd.concat([train_false, train_true])
+    val = pd.concat([val_false, val_true])
+    test = pd.concat([test_false, test_true])
 
     train = train.reset_index(drop=True)
     val = val.reset_index(drop=True)
@@ -100,21 +104,31 @@ def train_val_test_split(data_frame: pd.DataFrame, shuffle=True):
 def get_directory_files(directory):
     return [os.path.basename(file) for file in glob.glob(f"{directory}/*.pkl")]
 
+# deleted a function for our own purpose
+# def loads(data_sets_dir, ratio=1):
+#     data_sets_files = sorted([f for f in listdir(data_sets_dir) if isfile(join(data_sets_dir, f))])
 
-def loads(data_sets_dir, ratio=1):
-    data_sets_files = sorted([f for f in listdir(data_sets_dir) if isfile(join(data_sets_dir, f))])
+#     if ratio < 1:
+#         data_sets_files = get_ratio(data_sets_files, ratio)
 
-    if ratio < 1:
-        data_sets_files = get_ratio(data_sets_files, ratio)
+#     dataset = load(data_sets_dir, data_sets_files[0])
+#     data_sets_files.remove(data_sets_files[0])
 
-    dataset = load(data_sets_dir, data_sets_files[0])
-    data_sets_files.remove(data_sets_files[0])
+#     for ds_file in data_sets_files:
+#         dataset = dataset.append(load(data_sets_dir, ds_file))
 
-    for ds_file in data_sets_files:
-        dataset = dataset.append(load(data_sets_dir, ds_file))
+#     return dataset
+def loads(data_sets_dir):
+    data_sets = get_directory_files(data_sets_dir)
+    df_list = []
+    for ds_file in data_sets:
+        df_list.append(load(data_sets_dir, ds_file))
 
+    # Use the modern pd.concat to combine all datasets at once
+    dataset = pd.concat(df_list, ignore_index=True)
+
+    print(dataset.info(verbose=True))
     return dataset
-
 
 def clean(data_frame: pd.DataFrame):
     return data_frame.drop_duplicates(subset="func", keep=False)

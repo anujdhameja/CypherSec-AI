@@ -28,42 +28,89 @@ def graph_indexing(graph):
 
 def joern_parse(joern_path, input_path, output_path, file_name):
     out_file = file_name + ".bin"
-    joern_parse_call = subprocess.run(["./" + joern_path + "joern-parse", input_path, "--output", output_path + out_file],
-                                      stdout=subprocess.PIPE, text=True, check=True)
+    # Get the full, absolute paths so Joern knows exactly where to look
+    abs_input_path = os.path.abspath(input_path)
+    abs_output_path = os.path.abspath(output_path + out_file)
+
+# Define the command using the absolute paths
+    command = ["joern-parse.bat", abs_input_path, "--output", abs_output_path]
+
+# Run the command from INSIDE the joern-cli folder
+    joern_parse_call = subprocess.run(command, cwd=joern_path, shell=True, check=True)
     print(str(joern_parse_call))
     return out_file
 
 
-def joern_create(joern_path, in_path, out_path, cpg_files):
-    joern_process = subprocess.Popen(["./" + joern_path + "joern"], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+# def joern_create(joern_path, in_path, out_path, cpg_files):
+#     joern_process = subprocess.Popen([joern_path + "joern.bat"], stdin=subprocess.PIPE, stdout=subprocess.PIPE ,cwd=joern_path , shell=True)
+#     json_files = []
+#     for cpg_file in cpg_files:
+#         json_file_name = f"{cpg_file.split('.')[0]}.json"
+#         json_files.append(json_file_name)
+
+#         print(in_path+cpg_file)
+#         if os.path.exists(in_path+cpg_file):
+#             json_out = f"{os.path.abspath(out_path)}/{json_file_name}"
+#             import_cpg_cmd = f"importCpg(\"{os.path.abspath(in_path)}/{cpg_file}\")\r".encode()
+#             script_path = f"{os.path.dirname(os.path.abspath(joern_path))}/graph-for-funcs.sc"
+#             run_script_cmd = f"cpg.runScript(\"{script_path}\").toString() |> \"{json_out}\"\r".encode()
+#             joern_process.stdin.write(import_cpg_cmd)
+#             print(joern_process.stdout.readline().decode())
+#             joern_process.stdin.write(run_script_cmd)
+#             print(joern_process.stdout.readline().decode())
+#             joern_process.stdin.write("delete\r".encode())
+#             print(joern_process.stdout.readline().decode())
+#     try:
+#         outs, errs = joern_process.communicate(timeout=60)
+#     except subprocess.TimeoutExpired:
+#         joern_process.kill()
+#         outs, errs = joern_process.communicate()
+#     if outs is not None:
+#         print(f"Outs: {outs.decode()}")
+#     if errs is not None:
+#         print(f"Errs: {errs.decode()}")
+#     return json_files
+# Add this at the top of the file if it's not there
+
+# Add this at the top of the file if it's not there
+
+
+# Final, corrected version of the function
+def joern_create(joern_path, cpg_path, out_path, cpg_files):
+    """
+    Rewritten for robust, non-interactive Joern execution on Windows using --script.
+    Fixes filename typo and uses correct argument passing for the script.
+    """
+    print("Starting non-interactive Joern processing with --script...")
     json_files = []
+    # FIX 1: Corrected filename from 'graph-for-func.sc' to 'graph-for-funcs.sc'
+    script_path = os.path.abspath(os.path.join(joern_path, "graph-for-funcs.sc"))
+
     for cpg_file in cpg_files:
-        json_file_name = f"{cpg_file.split('.')[0]}.json"
-        json_files.append(json_file_name)
+        out_file = cpg_file.split(".")[0] + ".json"
+        full_cpg_path = os.path.abspath(os.path.join(cpg_path, cpg_file))
+        full_out_path = os.path.abspath(os.path.join(out_path, out_file))
 
-        print(in_path+cpg_file)
-        if os.path.exists(in_path+cpg_file):
-            json_out = f"{os.path.abspath(out_path)}/{json_file_name}"
-            import_cpg_cmd = f"importCpg(\"{os.path.abspath(in_path)}/{cpg_file}\")\r".encode()
-            script_path = f"{os.path.dirname(os.path.abspath(joern_path))}/graph-for-funcs.sc"
-            run_script_cmd = f"cpg.runScript(\"{script_path}\").toString() |> \"{json_out}\"\r".encode()
-            joern_process.stdin.write(import_cpg_cmd)
-            print(joern_process.stdout.readline().decode())
-            joern_process.stdin.write(run_script_cmd)
-            print(joern_process.stdout.readline().decode())
-            joern_process.stdin.write("delete\r".encode())
-            print(joern_process.stdout.readline().decode())
-    try:
-        outs, errs = joern_process.communicate(timeout=60)
-    except subprocess.TimeoutExpired:
-        joern_process.kill()
-        outs, errs = joern_process.communicate()
-    if outs is not None:
-        print(f"Outs: {outs.decode()}")
-    if errs is not None:
-        print(f"Errs: {errs.decode()}")
+        # FIX 2: Corrected command structure. Arguments are passed directly after the script.
+        command = [
+            "joern.bat",
+            "--script", script_path,
+            full_cpg_path,  # First argument to the script (cpgFile)
+            full_out_path   # Second argument to the script (outFile)
+        ]
+
+        print(f"Processing {cpg_file}...")
+        try:
+            subprocess.run(command, cwd=joern_path, shell=True, check=True, capture_output=True, text=True)
+            print(f"Successfully created {out_file}")
+            json_files.append(out_file)
+        except subprocess.CalledProcessError as e:
+            print(f"ERROR: Failed to process {cpg_file}.")
+            print(f"Joern's Output:\n{e.stdout}")
+            print(f"Joern's Error Output:\n{e.stderr}")
+            continue
+    
     return json_files
-
 
 def json_process(in_path, json_file):
     if os.path.exists(in_path+json_file):

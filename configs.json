@@ -38,13 +38,13 @@
     },
     "embed" : {
         "nodes_dim" : 205,
-        "word2vec_args": {"size" : 100, "alpha" : 0.01, "window" : 5, "min_count" : 3, "sample" : 1e-5,
+        "word2vec_args": {"vector_size" : 100, "alpha" : 0.01, "window" : 5, "min_count" : 3, "sample" : 1e-5,
                 "workers" : 4, "sg" : 1, "hs" : 0, "negative" : 5
             },
         "edge_type": "Ast"
     },
     "process" : {
-        "epochs" : 100,
+        "epochs" : 5,   
         "patience" : 10,
         "batch_size" : 8,
         "dataset_ratio" : 0.2,
