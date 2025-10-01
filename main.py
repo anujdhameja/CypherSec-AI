@@ -33,7 +33,7 @@ def select(dataset):
     #print(len(result))
     #result = result.iloc[11001:]
     #print(len(result))
-    result = result.head(200)
+    # result = result.head(200)   # made a change here 
 
     return result
 
@@ -54,7 +54,7 @@ def create_task():
         cpg_file = prepare.joern_parse(context.joern_cli_dir, PATHS.joern, PATHS.cpg, f"{s}_{FILES.cpg}")
         cpg_files.append(cpg_file)
         print(f"Dataset {s} to cpg.")
-        shutil.rmtree(PATHS.joern)
+        shutil.rmtree(PATHS.joern)   # delete joern files
     # Create CPG with graphs json files
     json_files = prepare.joern_create(context.joern_cli_dir, PATHS.cpg, PATHS.cpg, cpg_files)
     for (s, slice), json_file in zip(slices, json_files):

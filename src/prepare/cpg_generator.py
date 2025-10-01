@@ -76,41 +76,114 @@ def joern_parse(joern_path, input_path, output_path, file_name):
 
 
 # Final, corrected version of the function
+# def joern_create(joern_path, cpg_path, out_path, cpg_files):
+#     """
+#     Rewritten for robust, non-interactive Joern execution on Windows using --script.
+#     Fixes filename typo and uses correct argument passing for the script.
+#     """
+#     print("Starting non-interactive Joern processing with --script...")
+#     json_files = []
+#     # FIX 1: Corrected filename from 'graph-for-func.sc' to 'graph-for-funcs.sc'
+#     script_path = os.path.abspath(os.path.join(joern_path, "graph-for-funcs.sc"))
+
+#     for cpg_file in cpg_files:
+#         out_file = cpg_file.split(".")[0] + ".json"
+#         full_cpg_path = os.path.abspath(os.path.join(cpg_path, cpg_file))
+#         full_out_path = os.path.abspath(os.path.join(out_path, out_file))
+
+#         # FIX 2: Corrected command structure. Arguments are passed directly after the script.
+#         command = [
+#             "joern.bat",
+#             "--script", script_path,
+#             full_cpg_path,  # First argument to the script (cpgFile)
+#             full_out_path   # Second argument to the script (outFile)
+#         ]
+
+#         print(f"Processing {cpg_file}...")
+#         try:
+#             subprocess.run(command, cwd=joern_path, shell=True, check=True, capture_output=True, text=True)
+#             print(f"Successfully created {out_file}")
+#             json_files.append(out_file)
+#         except subprocess.CalledProcessError as e:
+#             print(f"ERROR: Failed to process {cpg_file}.")
+#             print(f"Joern's Output:\n{e.stdout}")
+#             print(f"Joern's Error Output:\n{e.stderr}")
+#             continue
+    
+#     return json_files
+
+
+
+
+
+import os
+import subprocess
+
+# Final, modernized version of the function
+# def joern_create(joern_path, cpg_path, out_path, cpg_files):
+#     """
+#     Rewritten for robust, non-interactive Joern execution on Windows using the --script flag
+#     and the new custom script `extract_funcs.sc`.
+#     """
+#     print("Starting non-interactive Joern processing with modern script...")
+#     json_files = []
+#     script_path = os.path.abspath(os.path.join(joern_path, "extract_funcs.sc"))
+
+#     for cpg_file in cpg_files:
+#         out_file = cpg_file.split(".")[0] + ".json"
+#         full_cpg_path = os.path.abspath(os.path.join(cpg_path, cpg_file))
+#         full_out_path = os.path.abspath(os.path.join(out_path, out_file))
+
+#         # This is the correct non-interactive command for the new Joern
+#         command = [
+#             "joern.bat",
+#             "--script", script_path,
+#             full_cpg_path,  # First argument to our script (cpgFile)
+#             full_out_path   # Second argument to our script (outFile)
+#         ]
+
+#         print(f"Processing {cpg_file}...")
+#         try:
+#             subprocess.run(command, cwd=joern_path, shell=True, check=True, capture_output=True, text=True)
+#             print(f"Successfully created {out_file}")
+#             json_files.append(out_file)
+#         except subprocess.CalledProcessError as e:
+#             print(f"ERROR: Failed to process {cpg_file}.")
+#             print(f"Joern's Output:\n{e.stdout}")
+#             print(f"Joern's Error Output:\n{e.stderr}")
+#             continue
+
+#     return json_files
+
+
+#Made a change here 
+
 def joern_create(joern_path, cpg_path, out_path, cpg_files):
     """
-    Rewritten for robust, non-interactive Joern execution on Windows using --script.
-    Fixes filename typo and uses correct argument passing for the script.
+    Non-interactive Joern execution with hardcoded Scala script.
     """
-    print("Starting non-interactive Joern processing with --script...")
-    json_files = []
-    # FIX 1: Corrected filename from 'graph-for-func.sc' to 'graph-for-funcs.sc'
-    script_path = os.path.abspath(os.path.join(joern_path, "graph-for-funcs.sc"))
+    print("Starting non-interactive Joern processing with extract_funcs.sc...")
+    script_path = os.path.abspath(os.path.join(joern_path, "extract_funcs.sc"))
 
     for cpg_file in cpg_files:
-        out_file = cpg_file.split(".")[0] + ".json"
-        full_cpg_path = os.path.abspath(os.path.join(cpg_path, cpg_file))
-        full_out_path = os.path.abspath(os.path.join(out_path, out_file))
-
-        # FIX 2: Corrected command structure. Arguments are passed directly after the script.
-        command = [
-            "joern.bat",
-            "--script", script_path,
-            full_cpg_path,  # First argument to the script (cpgFile)
-            full_out_path   # Second argument to the script (outFile)
-        ]
-
         print(f"Processing {cpg_file}...")
         try:
-            subprocess.run(command, cwd=joern_path, shell=True, check=True, capture_output=True, text=True)
-            print(f"Successfully created {out_file}")
-            json_files.append(out_file)
+            subprocess.run(
+                ["joern.bat", "--script", script_path],
+                cwd=joern_path,
+                shell=True,
+                check=True,
+                capture_output=True,
+                text=True
+            )
+            print(f"Processed {cpg_file} successfully (JSON written to {out_path})")
         except subprocess.CalledProcessError as e:
-            print(f"ERROR: Failed to process {cpg_file}.")
-            print(f"Joern's Output:\n{e.stdout}")
-            print(f"Joern's Error Output:\n{e.stderr}")
-            continue
-    
-    return json_files
+            print(f"ERROR processing {cpg_file}:")
+            print(f"stdout: {e.stdout}")
+            print(f"stderr: {e.stderr}")
+
+
+
 
 def json_process(in_path, json_file):
     if os.path.exists(in_path+json_file):

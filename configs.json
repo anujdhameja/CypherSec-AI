@@ -44,10 +44,10 @@
         "edge_type": "Ast"
     },
     "process" : {
-        "epochs" : 5,   
+        "epochs" : 100,   
         "patience" : 10,
         "batch_size" : 8,
-        "dataset_ratio" : 0.2,
+        "dataset_ratio" : 1.0,
         "shuffle" : false
     }
 }

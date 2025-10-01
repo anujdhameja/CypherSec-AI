@@ -6,14 +6,28 @@ from cpgclient.CpgClient import CpgClient
 
 
 class CPGClientWrapper(CpgClient):
-    def __init__(self, address='127.0.0.1', port=8080):
-        super(CPGClientWrapper, self).__init__(address, port)
-        self.abs_path = os.path.dirname(os.path.abspath(os.getcwd()))
-        self.query_script = f"cpg.runScript(\"{self.abs_path}/joern/graph-for-funcs.sc\")"
+    # def __init__(self, address='127.0.0.1', port=8080):
+    #     super(CPGClientWrapper, self).__init__(address, port)
+    #     self.abs_path = os.path.dirname(os.path.abspath(os.getcwd()))
+    #     self.query_script = f"cpg.runScript(\"{self.abs_path}/joern/extract_funcs.sc\")"
 
-    def __call__(self, out_path):
-        self.create_cpg(self.abs_path + out_path)
+    def __init__(self, address='127.0.0.1', port=8080):
+        super().__init__(address, port)
+        self.abs_path = os.path.dirname(os.path.abspath(os.getcwd()))
+        # Point to your custom hardcoded script
+        self.query_script = f"cpg.runScript(\"{self.abs_path}/joern/extract_funcs.sc\")"
+    
+    # def __call__(self, out_path):
+    #     self.create_cpg(self.abs_path + out_path)
+    #     return self.query(self.query_script)
+    # made a change here
+    
+    
+    def __call__(self, out_path=None):
+    # out_path ignored for now, script uses hardcoded path
+        self.create_cpg(self.abs_path + "/data/cpg")
         return self.query(self.query_script)
+
 
     def _wait_until_cpg_is_created(self):
         while not self.is_cpg_loaded():
