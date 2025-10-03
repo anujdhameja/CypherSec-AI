@@ -20,10 +20,35 @@ def funcs_to_graphs(funcs_path):
     return graphs_json["functions"]
 
 
+# def graph_indexing(graph):
+#     idx = int(graph["file"].split(".c")[0].split("/")[-1])
+#     del graph["file"]
+#     return idx, {"functions": [graph]}
+
+
 def graph_indexing(graph):
-    idx = int(graph["file"].split(".c")[0].split("/")[-1])
-    del graph["file"]
-    return idx, {"functions": [graph]}
+    file_name = graph.get("file", "N/A")
+    
+    # Skip invalid or pseudo file names
+    try:
+        idx = int(file_name.split(".c")[0].split("/")[-1])
+    except ValueError:
+        idx = -1  # dummy index for non-numeric or pseudo files
+    
+    # Now continue processing nodes/edges as before
+    nodes = graph.get("nodes", [])
+    edges = graph.get("edges", [])
+    
+    # Example: collect node ids and labels
+    node_list = [{"id": n["id"], "label": n["label"], "code": n.get("code", "")} for n in nodes]
+    
+    return {
+        "file_index": idx,
+        "function": graph.get("function", "N/A"),
+        "nodes": node_list,
+        "edges": edges
+    }
+
 
 
 def joern_parse(joern_path, input_path, output_path, file_name):
@@ -156,17 +181,51 @@ import subprocess
 #     return json_files
 
 
-#Made a change here 
+# Made a change here 
+
+# def joern_create(joern_path, cpg_path, out_path, cpg_files):
+#     """
+#     Non-interactive Joern execution with hardcoded Scala script.
+#     """
+#     print("Starting non-interactive Joern processing with extract_funcs.sc...")
+#     script_path = os.path.abspath(os.path.join(joern_path, "extract_funcs.sc"))
+
+#     for cpg_file in cpg_files:
+#         print(f"Processing {cpg_file}...")
+#         try:
+#             subprocess.run(
+#                 ["joern.bat", "--script", script_path],
+#                 cwd=joern_path,
+#                 shell=True,
+#                 check=True,
+#                 capture_output=True,
+#                 text=True
+#             )
+#             print(f"Processed {cpg_file} successfully (JSON written to {out_path})")
+#         except subprocess.CalledProcessError as e:
+#             print(f"ERROR processing {cpg_file}:")
+#             print(f"stdout: {e.stdout}")
+#             print(f"stderr: {e.stderr}")
+
+
+#made a change here to solve the issue of not returning 
 
 def joern_create(joern_path, cpg_path, out_path, cpg_files):
     """
     Non-interactive Joern execution with hardcoded Scala script.
+    Returns a list of JSON filenames created.
     """
     print("Starting non-interactive Joern processing with extract_funcs.sc...")
     script_path = os.path.abspath(os.path.join(joern_path, "extract_funcs.sc"))
 
+    json_files = []
+
     for cpg_file in cpg_files:
         print(f"Processing {cpg_file}...")
+
+        # Derive json filename from .bin
+        json_file = os.path.splitext(cpg_file)[0] + ".json"
+
         try:
             subprocess.run(
                 ["joern.bat", "--script", script_path],
@@ -176,24 +235,47 @@ def joern_create(joern_path, cpg_path, out_path, cpg_files):
                 capture_output=True,
                 text=True
             )
-            print(f"Processed {cpg_file} successfully (JSON written to {out_path})")
+            print(f"Processed {cpg_file} successfully (JSON written to {cpg_path})")
+            json_files.append(json_file)
+
         except subprocess.CalledProcessError as e:
             print(f"ERROR processing {cpg_file}:")
             print(f"stdout: {e.stdout}")
             print(f"stderr: {e.stderr}")
 
+    if not json_files:
+        print("[WARNING] No JSON files were created. Check Joern logs.")
+
+    return json_files
 
 
 
-def json_process(in_path, json_file):
-    if os.path.exists(in_path+json_file):
-        with open(in_path+json_file) as jf:
-            cpg_string = jf.read()
-            cpg_string = re.sub(r"io\.shiftleft\.codepropertygraph\.generated\.", '', cpg_string)
-            cpg_json = json.loads(cpg_string)
-            container = [graph_indexing(graph) for graph in cpg_json["functions"] if graph["file"] != "N/A"]
-            return container
-    return None
+# def json_process(in_path, json_file):
+#     if os.path.exists(in_path+json_file):
+#         with open(in_path+json_file) as jf:
+#             cpg_string = jf.read()
+#             cpg_string = re.sub(r"io\.shiftleft\.codepropertygraph\.generated\.", '', cpg_string)
+#             cpg_json = json.loads(cpg_string)
+#             container = [graph_indexing(graph) for graph in cpg_json["functions"] if graph["file"] != "N/A"]
+#             return container
+#     return None
+
+def json_process(cpg_path, json_file):
+    with open(f"{cpg_path}/{json_file}", "r", encoding="utf-8") as f:
+        cpg_json = json.load(f)
+    
+    container = [
+        graph_indexing(graph)
+        for graph in cpg_json.get("functions", [])
+        # Only process real files, ignore pseudo nodes
+        if graph.get("file", "N/A") != "N/A" and not graph.get("file", "").startswith("<")
+    ]
+    
+    # Optional: remove graphs with dummy index (-1)
+    container = [g for g in container if g["file_index"] != -1]
+
+    return container
+
 
 '''
 def generate(dataset, funcs_path):

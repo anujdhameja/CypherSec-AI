@@ -56,7 +56,12 @@ def create_task():
         print(f"Dataset {s} to cpg.")
         shutil.rmtree(PATHS.joern)   # delete joern files
     # Create CPG with graphs json files
+    # json_files = prepare.joern_create(context.joern_cli_dir, PATHS.cpg, PATHS.cpg, cpg_files)
+    # for (s, slice), json_file in zip(slices, json_files):
+    #     graphs = prepare.json_process(PATHS.cpg, json_file)
     json_files = prepare.joern_create(context.joern_cli_dir, PATHS.cpg, PATHS.cpg, cpg_files)
+    print("DEBUG: joern_create returned ->", json_files)
+
     for (s, slice), json_file in zip(slices, json_files):
         graphs = prepare.json_process(PATHS.cpg, json_file)
         if graphs is None:
