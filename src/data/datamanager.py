@@ -45,13 +45,52 @@ def apply_filter(data_frame: pd.DataFrame, filter_func):
 def rename(data_frame: pd.DataFrame, old, new):
     return data_frame.rename(columns={old: new})
 
+# def tokenize(data_frame: pd.DataFrame):
+#     """
+#     Tokenize the 'func' column of a DataFrame containing dicts with 'function' keys.
+#     Returns a DataFrame with a single 'tokens' column.
+#     """
+#     def safe_tokenize(x):
+#         # Check if x is a dict with 'function' key
+#         if isinstance(x, dict) and 'function' in x and x['function'] is not None:
+#             return parse.tokenizer(str(x['function']))
+#         # fallback to empty list if missing
+#         return []
+
+#     # Apply safe tokenization
+#     data_frame['func'] = data_frame['func'].apply(safe_tokenize)
+
+#     # Rename column
+#     data_frame = rename(data_frame, 'func', 'tokens')
+
+#     # Return only tokens column
+#     return data_frame[['tokens']]
+
 
 def tokenize(data_frame: pd.DataFrame):
-    data_frame.func = data_frame.func.apply(parse.tokenizer)
-    # Change column name
-    data_frame = rename(data_frame, 'func', 'tokens')
-    # Keep just the tokens
+    """
+    Convert function dicts to code strings and tokenize them.
+    Expects data_frame.func to contain either a string or dict with 'function' key.
+    """
+    import src.utils.functions.parse as parse
+    import pandas as pd
+
+    def safe_tokenize(f):
+        if isinstance(f, dict):
+            code = f.get("function", "")
+        else:
+            code = str(f)
+        return parse.tokenizer(code)
+
+    # Apply safe_tokenize to all rows
+    data_frame['tokens'] = data_frame['func'].apply(safe_tokenize)
+
+    # Keep only rows with tokens
+    data_frame = data_frame[data_frame['tokens'].map(len) > 0]
+
+    # Return only tokens column
     return data_frame[["tokens"]]
+
 
 
 def to_files(data_frame: pd.DataFrame, out_path):

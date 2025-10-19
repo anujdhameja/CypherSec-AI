@@ -1,10 +1,10 @@
 {
     "devign": {
-        "learning_rate" : 1e-4,
-        "weight_decay" : 1.3e-6,
-        "loss_lambda" : 1.3e-6,
+        "learning_rate": 1e-4,
+        "weight_decay": 1.3e-6,
+        "loss_lambda": 1.3e-6,
         "model": {
-            "gated_graph_conv_args": {"out_channels" : 200, "num_layers" : 6, "aggr" : "add", "bias": true},
+            "gated_graph_conv_args": {"out_channels" : 200, "num_layers" : 4, "aggr" : "add", "bias": true},
             "conv_args": {
                 "conv1d_1" : {"in_channels": 205, "out_channels": 50, "kernel_size": 3, "padding" : 1},
                 "conv1d_2" : {"in_channels": 50, "out_channels": 20, "kernel_size": 1, "padding" : 1},
@@ -44,7 +44,7 @@
         "edge_type": "Ast"
     },
     "process" : {
-        "epochs" : 100,   
+        "epochs" : 50,   
         "patience" : 10,
         "batch_size" : 8,
         "dataset_ratio" : 1.0,

@@ -16,17 +16,36 @@ class Step:
         self.optimizer = optimizer
 
     def __call__(self, i, x, y):
+        # Clear gradients first (moved to beginning for stability)
+        if self.model.training:
+            self.optimizer.zero_grad()
+        
         out = self.model(x)
-        loss = self.criterion(out, y.float())
-        acc = softmax_accuracy(out, y.float())
+        target = y.squeeze().long()  # Ensure correct target format
+        loss = self.criterion(out, target)
+        
+        # Calculate accuracy with proper target format
+        pred = out.argmax(dim=1)
+        acc = (pred == target).float().mean()
 
         if self.model.training:
-            # calculates the gradient
+            # Check for NaN loss
+            if torch.isnan(loss):
+                print(f"⚠️ NaN loss detected at batch {i}, skipping")
+                return stats.Stat(out.tolist(), 0.0, 0.0, y.tolist())
+            
+            # Backward pass
             loss.backward()
-            # and performs a parameter update based on it
+            
+            # CRITICAL: Gradient clipping for stability
+            grad_norm = torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
+            
+            # Check for exploding gradients
+            if grad_norm > 10.0:
+                print(f"⚠️ Large gradient norm: {grad_norm:.2f} at batch {i}")
+            
+            # Parameter update
             self.optimizer.step()
-            # clears old gradients from the last step
-            self.optimizer.zero_grad()
 
         # print(f"\tBatch: {i}; Loss: {round(loss.item(), 4)}", end="")
         return stats.Stat(out.tolist(), loss.item(), acc.item(), y.tolist())

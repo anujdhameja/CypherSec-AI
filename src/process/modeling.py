@@ -24,6 +24,10 @@ class Train(object):
                     self.history(val_stats, epoch + 1)
 
                 print(self.history)
+                
+                # Step the learning rate scheduler if available
+                if hasattr(self.step, 'scheduler'):
+                    self.step.scheduler.step(val_stats.loss())
 
                 if early_stopping is not None:
                     valid_loss = val_stats.loss()

@@ -132,6 +132,14 @@ class Process(Config):
 class Devign(Config):
     def __init__(self):
         super().__init__('devign')
+        # These values will be loaded from configs.json
+        # Make sure configs.json has these exact values:
+        # "devign": {
+        #     "learning_rate": 1e-4,
+        #     "weight_decay": 1.3e-6,
+        #     "loss_lambda": 1.3e-6,
+        #     "model": {...}
+        # }
 
     @property
     def learning_rate(self):
