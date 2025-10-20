@@ -116,13 +116,20 @@ class Devign(Step):
         log.log_info('devign', f"🔧 FIXED CONFIG - LR: {self.lr}; WD: {self.wd};")
         
         # Create model with REDUCED regularization
+        # _model = BalancedDevignModel(
+        #     input_dim=model['conv_args']['conv1d_1']['in_channels'],
+        #     output_dim=2,
+        #     hidden_dim=model['gated_graph_conv_args']['out_channels'],
+        #     num_steps=4,
+        #     dropout=0.2  # REDUCED from 0.4 (diagnostic recommendation)
+        # )
         _model = BalancedDevignModel(
-            input_dim=model['conv_args']['conv1d_1']['in_channels'],
+            input_dim=100,  # CHANGED from model['conv_args']['conv1d_1']['in_channels']
             output_dim=2,
-            hidden_dim=model['gated_graph_conv_args']['out_channels'],
+            hidden_dim=200,
             num_steps=4,
-            dropout=0.2  # REDUCED from 0.4 (diagnostic recommendation)
-        )
+            dropout=0.2
+            )
         _model = _model.to(device)
         
         # CRITICAL FIX: Use standard CrossEntropyLoss (no label smoothing)
