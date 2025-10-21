@@ -1,0 +1,36 @@
+{
+  "timestamp": "20251021_055724",
+  "random_state": 42,
+  "results": {
+    "GNN (BalancedDevignModel)": {
+      "val_accuracy": 0.5211830535571543,
+      "val_precision": 0.553898925304201,
+      "val_recall": 0.5211830535571543,
+      "val_f1": 0.4301988736726523,
+      "test_accuracy": 0.5167731629392971,
+      "test_precision": 0.5387723668023114,
+      "test_recall": 0.5167731629392971,
+      "test_f1": 0.4313322026997668
+    },
+    "Random Forest (Node Features)": {
+      "val_accuracy": 0.5098137896326119,
+      "val_precision": 0.5416013884451883,
+      "val_recall": 0.5098137896326119,
+      "val_f1": 0.396126939075679,
+      "test_accuracy": 0.5115717615717615,
+      "test_precision": 0.5463944039726516,
+      "test_recall": 0.5115717615717615,
+      "test_f1": 0.4026335403340403
+    },
+    "Random Forest (Structural Features)": {
+      "val_accuracy": 0.5475619504396483,
+      "val_precision": 0.5512834465040276,
+      "val_recall": 0.5475619504396483,
+      "val_f1": 0.5404671825567895,
+      "test_accuracy": 0.5063897763578274,
+      "test_precision": 0.507562862676872,
+      "test_recall": 0.5063897763578274,
+      "test_f1": 0.49500997711122274
+    }
+  }
+}

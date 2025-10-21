@@ -10,6 +10,7 @@ import torch.nn.functional as F
 from pathlib import Path
 import numpy as np
 from collections import Counter
+import pandas as pd
 
 from src.process.balanced_training_config import BalancedDevignModel
 from src.process.step import Step
@@ -34,30 +35,38 @@ class FixedTrainer:
     def load_and_analyze_data(self):
         """Load data and check for issues"""
         print("1. ANALYZING DATA...")
-        paths = configs.Paths()
-        dataset_path = Path(paths.input)
         
-        # Load all data from the input directory
-        full_dataset = InputDataset(str(dataset_path), max_files=10)  # Limit for faster testing
+        # Use the SAME data loading approach as the working auto_hyperparameter_FIXED.py
+        input_path = Path('data/input')
+        input_files = list(input_path.glob('*_input.pkl'))
+        
+        if not input_files:
+            raise FileNotFoundError("No input files found!")
+        
+        # Load first few files (same as working version)
+        all_data = []
+        for f in input_files[:10]:  # Use subset for faster search
+            df = pd.read_pickle(f)
+            all_data.append(df)
+        
+        combined = pd.concat(all_data, ignore_index=True)
+        graphs = combined['input'].tolist()  # Direct extraction like working version
+        
+        print(f"   Loaded {len(graphs)} samples from {len(input_files[:10])} files")
         
         # Split into train/val (80/20 split)
-        total_samples = len(full_dataset)
-        train_size = int(0.8 * total_samples)
+        train_size = int(0.8 * len(graphs))
+        val_size = int(0.1 * len(graphs))
         
-        # Create train/val splits
-        train_indices = list(range(train_size))
-        val_indices = list(range(train_size, total_samples))
+        self.train_graphs = graphs[:train_size]
+        self.val_graphs = graphs[train_size:train_size+val_size]
         
-        self.train_ds = torch.utils.data.Subset(full_dataset, train_indices)
-        self.val_ds = torch.utils.data.Subset(full_dataset, val_indices)
-        
-        print(f"   Total: {total_samples} samples")
-        print(f"   Train: {len(self.train_ds)} samples")
-        print(f"   Val: {len(self.val_ds)} samples")
+        print(f"   Train: {len(self.train_graphs)} samples")
+        print(f"   Val: {len(self.val_graphs)} samples")
         
         # Check class balance
-        train_labels = [full_dataset[i].y.item() for i in train_indices]
-        val_labels = [full_dataset[i].y.item() for i in val_indices]
+        train_labels = [g.y.item() for g in self.train_graphs]
+        val_labels = [g.y.item() for g in self.val_graphs]
         
         train_counter = Counter(train_labels)
         val_counter = Counter(val_labels)
@@ -128,8 +137,7 @@ class FixedTrainer:
             weight_decay=1e-6  # Very low weight decay
         )
         
-        # Create Step object for training
-        step = Step(model, criterion, optimizer)
+        # No Step class - use direct training like working version
         
         # Learning rate scheduler with warmup
         warmup_epochs = 5
@@ -152,54 +160,59 @@ class FixedTrainer:
                     param_group['lr'] = lr
             
             # Training
-            step.train()
+            model.train()
             train_correct = 0
             train_total = 0
             train_loss = 0.0
             
-            # Create dataloader with proper batching for PyG
+            # Create dataloader EXACTLY like the working version
             from torch_geometric.loader import DataLoader
-            train_loader = DataLoader(
-                [self.train_ds[i] for i in range(len(self.train_ds))],
-                batch_size=16,
-                shuffle=True
-            )
+            train_loader = DataLoader(self.train_graphs, batch_size=8, shuffle=True)
             
-            for batch_idx, batch in enumerate(train_loader):
+            for batch in train_loader:
                 batch = batch.to(self.device)
                 
-                # Use Step class for training (batch processing)
-                stat = step(batch_idx, batch, batch.y)
+                optimizer.zero_grad()
+                output = model(batch)
+                target = batch.y.squeeze().long()
                 
-                train_loss += stat.loss
-                train_correct += stat.acc
+                loss = criterion(output, target)
+                
+                if torch.isnan(loss):
+                    continue
+                
+                loss.backward()
+                torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+                optimizer.step()
+                
+                train_loss += loss.item() * batch.num_graphs
+                pred = output.argmax(dim=1)
+                train_correct += (pred == target).sum().item()
                 train_total += batch.num_graphs
             
             train_acc = 100.0 * train_correct / train_total
             train_loss /= train_total
             
-            # Validation
-            step.eval()
+            # Validation EXACTLY like the working version
+            model.eval()
             val_correct = 0
             val_total = 0
             val_loss = 0.0
             
-            from torch_geometric.loader import DataLoader
-            val_loader = DataLoader(
-                [self.val_ds[i] for i in range(len(self.val_ds))],
-                batch_size=16,
-                shuffle=False
-            )
+            val_loader = DataLoader(self.val_graphs, batch_size=8, shuffle=False)
             
             with torch.no_grad():
                 for batch in val_loader:
                     batch = batch.to(self.device)
                     
-                    # Use Step class for validation (batch processing)
-                    stat = step(0, batch, batch.y)
+                    output = model(batch)
+                    target = batch.y.squeeze().long()
                     
-                    val_loss += stat.loss
-                    val_correct += stat.acc
+                    loss = criterion(output, target)
+                    
+                    val_loss += loss.item() * batch.num_graphs
+                    pred = output.argmax(dim=1)
+                    val_correct += (pred == target).sum().item()
                     val_total += batch.num_graphs
             
             val_acc = 100.0 * val_correct / val_total
