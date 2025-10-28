@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Task Solvability Validation
-Investigate if vulnerability detection is actually possible with current data
+Task Solvability Investigation
+Determines if vulnerability detection is actually possible with current data
 """
 
 import sys
@@ -9,8 +9,8 @@ import torch
 import numpy as np
 import pandas as pd
 from pathlib import Path
-from collections import Counter, defaultdict
 import json
+from collections import Counter, defaultdict
 import pickle
 from datetime import datetime
 
@@ -20,495 +20,437 @@ from src.utils.objects.input_dataset import InputDataset
 from src.process.balanced_training_config import BalancedDevignModel
 import configs
 
-class TaskValidator:
+class TaskSolvabilityInvestigator:
     def __init__(self):
-        # Get data path
+        # Get correct data path from configs
         paths = configs.Paths()
         self.data_dir = str(Path(paths.input))
         self.results = {}
         
-    def load_dataset_with_metadata(self):
-        """Load dataset and extract metadata for analysis"""
-        print("="*80)
-        print("LOADING DATASET WITH METADATA")
-        print("="*80)
+    def load_dataset_with_predictions(self):
+        """Load dataset and get model predictions"""
+        print("Loading dataset and generating predictions...")
         
-        dataset = InputDataset(self.data_dir, max_files=5)  # Limit for faster analysis
-        print(f"Loaded {len(dataset)} samples for analysis")
+        # Load dataset
+        dataset = InputDataset(self.data_dir)
+        print(f"Total graphs loaded: {len(dataset)}")
         
-        # Extract comprehensive metadata
-        metadata = []
-        for i, data in enumerate(dataset):
-            meta = {
-                'index': i,
-                'label': int(data.y.item()),
-                'num_nodes': data.x.shape[0],
-                'num_edges': data.edge_index.shape[1],
-                'node_features': data.x,
-                'edge_index': data.edge_index,
-                'avg_node_feature': data.x.mean().item(),
-                'max_node_feature': data.x.max().item(),
-                'min_node_feature': data.x.min().item(),
-                'feature_std': data.x.std().item(),
-            }
-            
-            # Graph structure metrics
-            if data.edge_index.shape[1] > 0:
-                degrees = torch.bincount(data.edge_index[0])
-                meta['avg_degree'] = degrees.float().mean().item()
-                meta['max_degree'] = degrees.max().item()
-                meta['degree_std'] = degrees.float().std().item()
-            else:
-                meta['avg_degree'] = 0
-                meta['max_degree'] = 0
-                meta['degree_std'] = 0
-            
-            metadata.append(meta)
-        
-        return dataset, metadata
-    
-    def analyze_label_distribution(self, metadata):
-        """Analyze label distribution and basic statistics"""
-        print("\n" + "="*80)
-        print("LABEL DISTRIBUTION ANALYSIS")
-        print("="*80)
-        
-        labels = [m['label'] for m in metadata]
-        label_counts = Counter(labels)
-        
-        print(f"Total samples: {len(labels)}")
-        print(f"Label distribution: {dict(label_counts)}")
-        print(f"Class balance: {label_counts[0]/len(labels):.1%} vs {label_counts[1]/len(labels):.1%}")
-        
-        # Analyze by label
-        vulnerable = [m for m in metadata if m['label'] == 1]
-        safe = [m for m in metadata if m['label'] == 0]
-        
-        print(f"\n📊 STRUCTURAL DIFFERENCES:")
-        print(f"{'Metric':<20} {'Vulnerable':<15} {'Safe':<15} {'Difference':<15}")
-        print("-" * 65)
-        
-        metrics = ['num_nodes', 'num_edges', 'avg_degree', 'max_degree', 'avg_node_feature', 'feature_std']
-        
-        for metric in metrics:
-            vuln_avg = np.mean([m[metric] for m in vulnerable])
-            safe_avg = np.mean([m[metric] for m in safe])
-            diff = abs(vuln_avg - safe_avg)
-            
-            print(f"{metric:<20} {vuln_avg:<15.2f} {safe_avg:<15.2f} {diff:<15.2f}")
-        
-        return vulnerable, safe
-    
-    def get_model_predictions(self, dataset, metadata):
-        """Get model predictions for analysis"""
-        print("\n" + "="*80)
-        print("GETTING MODEL PREDICTIONS")
-        print("="*80)
-        
-        # Load or train a simple model
+        # Load trained model (from previous comparison)
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        
-        # Get feature dimension
-        input_dim = dataset[0].x.shape[1]
-        
         model = BalancedDevignModel(
-            input_dim=input_dim,
-            hidden_dim=64,  # Smaller for faster training
+            input_dim=100,
+            hidden_dim=128,
             output_dim=2,
-            num_steps=2,
+            num_steps=3,
             dropout=0.3
         ).to(device)
         
-        # Quick training on subset
-        from torch_geometric.loader import DataLoader
+        try:
+            model.load_state_dict(torch.load('best_gnn_model.pth', map_location=device))
+            print("✓ Loaded trained model")
+        except:
+            print("⚠️ No trained model found, using random initialization")
         
-        train_indices = list(range(int(0.8 * len(dataset))))
-        val_indices = list(range(int(0.8 * len(dataset)), len(dataset)))
-        
-        train_data = [dataset[i] for i in train_indices]
-        val_data = [dataset[i] for i in val_indices]
-        
-        train_loader = DataLoader(train_data, batch_size=16, shuffle=True)
-        val_loader = DataLoader(val_data, batch_size=16, shuffle=False)
-        
-        optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
-        criterion = torch.nn.CrossEntropyLoss()
-        
-        print("Quick training for 20 epochs...")
-        model.train()
-        for epoch in range(20):
-            for batch in train_loader:
-                batch = batch.to(device)
-                optimizer.zero_grad()
-                out = model(batch)
-                loss = criterion(out, batch.y.long())
-                loss.backward()
-                optimizer.step()
-        
-        # Get predictions on validation set
+        # Get predictions for all samples
         model.eval()
         predictions = []
         true_labels = []
         confidences = []
         
+        from torch_geometric.loader import DataLoader
+        loader = DataLoader(dataset, batch_size=32, shuffle=False)
+        
         with torch.no_grad():
-            for batch in val_loader:
+            for batch in loader:
                 batch = batch.to(device)
                 out = model(batch)
                 probs = torch.softmax(out, dim=1)
                 pred = out.argmax(dim=1)
                 
                 predictions.extend(pred.cpu().numpy())
-                true_labels.extend(batch.y.cpu().numpy())
+                true_labels.extend(batch.y.long().cpu().numpy())
                 confidences.extend(probs.max(dim=1)[0].cpu().numpy())
         
-        return predictions, true_labels, confidences
+        return dataset, predictions, true_labels, confidences
     
-    def analyze_misclassifications(self, dataset, metadata, predictions, true_labels, confidences):
-        """Analyze misclassified samples"""
-        print("\n" + "="*80)
-        print("MISCLASSIFICATION ANALYSIS")
-        print("="*80)
+    def analyze_misclassifications(self, dataset, predictions, true_labels, confidences):
+        """Analyze the 20 worst misclassifications"""
+        print("\n=== ANALYZING MISCLASSIFICATIONS ===")
         
-        val_start_idx = int(0.8 * len(dataset))
-        val_metadata = metadata[val_start_idx:]
-        
-        # Find misclassifications
         misclassified = []
-        correctly_classified = []
-        
-        for i, (pred, true, conf, meta) in enumerate(zip(predictions, true_labels, confidences, val_metadata)):
-            sample_info = {
-                'val_index': i,
-                'global_index': meta['index'],
-                'predicted': int(pred),
-                'true': int(true),
-                'confidence': float(conf),
-                'metadata': meta
-            }
-            
+        for i, (pred, true, conf) in enumerate(zip(predictions, true_labels, confidences)):
             if pred != true:
-                misclassified.append(sample_info)
-            else:
-                correctly_classified.append(sample_info)
+                misclassified.append({
+                    'index': i,
+                    'predicted': pred,
+                    'true_label': true,
+                    'confidence': conf,
+                    'data': dataset[i]
+                })
         
-        print(f"Validation samples: {len(predictions)}")
-        print(f"Correctly classified: {len(correctly_classified)} ({len(correctly_classified)/len(predictions):.1%})")
-        print(f"Misclassified: {len(misclassified)} ({len(misclassified)/len(predictions):.1%})")
+        # Sort by confidence (most confident wrong predictions)
+        misclassified.sort(key=lambda x: x['confidence'], reverse=True)
         
-        # Analyze misclassification patterns
-        print(f"\n🔍 MISCLASSIFICATION PATTERNS:")
+        print(f"Total misclassifications: {len(misclassified)}")
+        print(f"Accuracy: {(len(predictions) - len(misclassified)) / len(predictions):.2%}")
         
-        # False positives (predicted vulnerable, actually safe)
-        false_positives = [m for m in misclassified if m['predicted'] == 1 and m['true'] == 0]
-        # False negatives (predicted safe, actually vulnerable)
-        false_negatives = [m for m in misclassified if m['predicted'] == 0 and m['true'] == 1]
+        # Analyze top 20 most confident wrong predictions
+        top_misclassified = misclassified[:20]
         
-        print(f"False Positives: {len(false_positives)} (model thinks safe code is vulnerable)")
-        print(f"False Negatives: {len(false_negatives)} (model misses actual vulnerabilities)")
+        analysis = {
+            'total_misclassified': len(misclassified),
+            'accuracy': (len(predictions) - len(misclassified)) / len(predictions),
+            'top_20_analysis': []
+        }
+        
+        print(f"\n📊 Top 20 Most Confident Misclassifications:")
+        print(f"{'Index':<8} {'True':<6} {'Pred':<6} {'Conf':<8} {'Nodes':<8} {'Edges':<8} {'Feature Stats'}")
+        print("-" * 80)
+        
+        for item in top_misclassified:
+            data = item['data']
+            feat_mean = data.x.mean().item()
+            feat_std = data.x.std().item()
+            feat_zero_ratio = (data.x == 0).float().mean().item()
+            
+            print(f"{item['index']:<8} {item['true_label']:<6} {item['predicted']:<6} "
+                  f"{item['confidence']:<8.3f} {data.x.shape[0]:<8} {data.edge_index.shape[1]:<8} "
+                  f"μ={feat_mean:.3f}, σ={feat_std:.3f}, zero={feat_zero_ratio:.2%}")
+            
+            analysis['top_20_analysis'].append({
+                'index': item['index'],
+                'true_label': item['true_label'],
+                'predicted': item['predicted'],
+                'confidence': item['confidence'],
+                'num_nodes': data.x.shape[0],
+                'num_edges': data.edge_index.shape[1],
+                'feature_mean': feat_mean,
+                'feature_std': feat_std,
+                'zero_feature_ratio': feat_zero_ratio
+            })
+        
+        return analysis
+    
+    def inspect_feature_quality(self, dataset):
+        """Deep dive into feature quality issues"""
+        print("\n=== FEATURE QUALITY INSPECTION ===")
+        
+        zero_feature_graphs = []
+        identical_feature_graphs = []
+        normal_graphs = []
+        
+        for i, data in enumerate(dataset):
+            # Check for zero features
+            zero_ratio = (data.x == 0).float().mean().item()
+            
+            # Check for identical features (all nodes have same features)
+            if data.x.shape[0] > 1:
+                feature_variance = data.x.var(dim=0).mean().item()
+                if feature_variance < 1e-6:  # Essentially identical
+                    identical_feature_graphs.append({
+                        'index': i,
+                        'data': data,
+                        'zero_ratio': zero_ratio,
+                        'variance': feature_variance
+                    })
+                elif zero_ratio > 0.9:  # >90% zeros
+                    zero_feature_graphs.append({
+                        'index': i,
+                        'data': data,
+                        'zero_ratio': zero_ratio
+                    })
+                else:
+                    normal_graphs.append({
+                        'index': i,
+                        'data': data,
+                        'zero_ratio': zero_ratio
+                    })
+        
+        print(f"Zero feature graphs: {len(zero_feature_graphs)}")
+        print(f"Identical feature graphs: {len(identical_feature_graphs)}")
+        print(f"Normal graphs: {len(normal_graphs)}")
         
         # Show examples
-        print(f"\n📋 TOP 10 MISCLASSIFIED SAMPLES (by confidence):")
-        print(f"{'Type':<15} {'Confidence':<12} {'Nodes':<8} {'Edges':<8} {'Avg Degree':<12}")
-        print("-" * 65)
+        feature_analysis = {
+            'zero_feature_count': len(zero_feature_graphs),
+            'identical_feature_count': len(identical_feature_graphs),
+            'normal_count': len(normal_graphs),
+            'zero_examples': [],
+            'identical_examples': [],
+            'normal_examples': []
+        }
         
-        sorted_misclassified = sorted(misclassified, key=lambda x: x['confidence'], reverse=True)[:10]
+        # Zero feature examples
+        print(f"\n🔍 Zero Feature Examples (showing first 5):")
+        for item in zero_feature_graphs[:5]:
+            data = item['data']
+            print(f"Graph {item['index']}: {data.x.shape[0]} nodes, "
+                  f"{item['zero_ratio']:.1%} zeros, label={data.y.item()}")
+            
+            feature_analysis['zero_examples'].append({
+                'index': item['index'],
+                'num_nodes': data.x.shape[0],
+                'zero_ratio': item['zero_ratio'],
+                'label': data.y.item()
+            })
         
-        for sample in sorted_misclassified:
-            sample_type = "False Pos" if sample['predicted'] == 1 else "False Neg"
-            meta = sample['metadata']
-            print(f"{sample_type:<15} {sample['confidence']:<12.3f} {meta['num_nodes']:<8} "
-                  f"{meta['num_edges']:<8} {meta['avg_degree']:<12.2f}")
+        # Identical feature examples
+        print(f"\n🔍 Identical Feature Examples (showing first 5):")
+        for item in identical_feature_graphs[:5]:
+            data = item['data']
+            print(f"Graph {item['index']}: {data.x.shape[0]} nodes, "
+                  f"variance={item['variance']:.2e}, label={data.y.item()}")
+            
+            feature_analysis['identical_examples'].append({
+                'index': item['index'],
+                'num_nodes': data.x.shape[0],
+                'variance': item['variance'],
+                'label': data.y.item()
+            })
         
-        return misclassified, correctly_classified
+        # Normal examples
+        print(f"\n🔍 Normal Feature Examples (showing first 5):")
+        for item in normal_graphs[:5]:
+            data = item['data']
+            feat_mean = data.x.mean().item()
+            feat_std = data.x.std().item()
+            print(f"Graph {item['index']}: {data.x.shape[0]} nodes, "
+                  f"μ={feat_mean:.3f}, σ={feat_std:.3f}, label={data.y.item()}")
+            
+            feature_analysis['normal_examples'].append({
+                'index': item['index'],
+                'num_nodes': data.x.shape[0],
+                'feature_mean': feat_mean,
+                'feature_std': feat_std,
+                'label': data.y.item()
+            })
+        
+        return feature_analysis
     
-    def inspect_sample_graphs(self, dataset, metadata, misclassified):
-        """Inspect actual graph structures of misclassified samples"""
-        print("\n" + "="*80)
-        print("DETAILED GRAPH INSPECTION")
-        print("="*80)
+    def analyze_label_distribution(self, dataset, predictions, true_labels):
+        """Analyze label patterns and distribution"""
+        print("\n=== LABEL DISTRIBUTION ANALYSIS ===")
         
-        # Take top 5 misclassified samples
-        top_misclassified = sorted(misclassified, key=lambda x: x['confidence'], reverse=True)[:5]
+        # Basic distribution
+        true_dist = Counter(true_labels)
+        pred_dist = Counter(predictions)
         
-        print("🔬 DETAILED ANALYSIS OF TOP 5 MISCLASSIFIED SAMPLES:")
+        print(f"True label distribution: {dict(true_dist)}")
+        print(f"Predicted distribution: {dict(pred_dist)}")
         
-        for i, sample in enumerate(top_misclassified, 1):
-            print(f"\n--- SAMPLE {i} ---")
-            print(f"Global Index: {sample['global_index']}")
-            print(f"Predicted: {sample['predicted']} ({'Vulnerable' if sample['predicted'] == 1 else 'Safe'})")
-            print(f"True Label: {sample['true']} ({'Vulnerable' if sample['true'] == 1 else 'Safe'})")
-            print(f"Confidence: {sample['confidence']:.3f}")
-            
-            # Get the actual graph data
-            graph_data = dataset[sample['global_index']]
-            
-            print(f"Graph Structure:")
-            print(f"  - Nodes: {graph_data.x.shape[0]}")
-            print(f"  - Edges: {graph_data.edge_index.shape[1]}")
-            print(f"  - Feature dim: {graph_data.x.shape[1]}")
-            
-            # Analyze node features
-            node_features = graph_data.x
-            print(f"Node Features Analysis:")
-            print(f"  - Mean: {node_features.mean():.3f}")
-            print(f"  - Std: {node_features.std():.3f}")
-            print(f"  - Min: {node_features.min():.3f}")
-            print(f"  - Max: {node_features.max():.3f}")
-            
-            # Check for patterns in features
-            # Look for zero features (might indicate missing data)
-            zero_features = (node_features == 0).sum().item()
-            total_features = node_features.numel()
-            print(f"  - Zero features: {zero_features}/{total_features} ({zero_features/total_features:.1%})")
-            
-            # Look for identical nodes (might indicate poor feature extraction)
-            unique_nodes = torch.unique(node_features, dim=0).shape[0]
-            print(f"  - Unique nodes: {unique_nodes}/{node_features.shape[0]} ({unique_nodes/node_features.shape[0]:.1%})")
-            
-            # Edge analysis
-            if graph_data.edge_index.shape[1] > 0:
-                edge_index = graph_data.edge_index
-                degrees = torch.bincount(edge_index[0], minlength=node_features.shape[0])
-                print(f"Degree Distribution:")
-                print(f"  - Min degree: {degrees.min().item()}")
-                print(f"  - Max degree: {degrees.max().item()}")
-                print(f"  - Avg degree: {degrees.float().mean().item():.2f}")
-                print(f"  - Isolated nodes: {(degrees == 0).sum().item()}")
-    
-    def compare_vulnerable_vs_safe_samples(self, dataset, vulnerable_meta, safe_meta):
-        """Compare vulnerable vs safe samples in detail"""
-        print("\n" + "="*80)
-        print("VULNERABLE vs SAFE COMPARISON")
-        print("="*80)
-        
-        print("🔍 DETAILED COMPARISON OF SAMPLE GRAPHS:")
-        
-        # Take 3 vulnerable and 3 safe samples
-        vuln_samples = vulnerable_meta[:3]
-        safe_samples = safe_meta[:3]
-        
-        print(f"\n--- VULNERABLE SAMPLES ---")
-        for i, meta in enumerate(vuln_samples, 1):
-            print(f"\nVulnerable Sample {i} (Index: {meta['index']}):")
-            graph_data = dataset[meta['index']]
-            
-            print(f"  Structure: {meta['num_nodes']} nodes, {meta['num_edges']} edges")
-            print(f"  Avg degree: {meta['avg_degree']:.2f}")
-            print(f"  Feature stats: mean={meta['avg_node_feature']:.3f}, std={meta['feature_std']:.3f}")
-            
-            # Check feature patterns
-            node_features = graph_data.x
-            feature_ranges = []
-            for dim in range(min(5, node_features.shape[1])):  # Check first 5 dimensions
-                dim_values = node_features[:, dim]
-                feature_ranges.append(f"dim{dim}: [{dim_values.min():.2f}, {dim_values.max():.2f}]")
-            print(f"  Feature ranges: {', '.join(feature_ranges)}")
-        
-        print(f"\n--- SAFE SAMPLES ---")
-        for i, meta in enumerate(safe_samples, 1):
-            print(f"\nSafe Sample {i} (Index: {meta['index']}):")
-            graph_data = dataset[meta['index']]
-            
-            print(f"  Structure: {meta['num_nodes']} nodes, {meta['num_edges']} edges")
-            print(f"  Avg degree: {meta['avg_degree']:.2f}")
-            print(f"  Feature stats: mean={meta['avg_node_feature']:.3f}, std={meta['feature_std']:.3f}")
-            
-            # Check feature patterns
-            node_features = graph_data.x
-            feature_ranges = []
-            for dim in range(min(5, node_features.shape[1])):  # Check first 5 dimensions
-                dim_values = node_features[:, dim]
-                feature_ranges.append(f"dim{dim}: [{dim_values.min():.2f}, {dim_values.max():.2f}]")
-            print(f"  Feature ranges: {', '.join(feature_ranges)}")
-    
-    def check_data_quality_issues(self, dataset, metadata):
-        """Check for common data quality issues"""
-        print("\n" + "="*80)
-        print("DATA QUALITY ASSESSMENT")
-        print("="*80)
-        
-        issues = []
-        
-        # Check for duplicate graphs
-        print("🔍 Checking for duplicate graphs...")
-        feature_hashes = []
-        for i, data in enumerate(dataset):
-            # Create a simple hash of the graph structure
-            node_hash = hash(tuple(data.x.flatten().numpy().round(4)))
-            edge_hash = hash(tuple(data.edge_index.flatten().numpy()))
-            graph_hash = hash((node_hash, edge_hash, data.y.item()))
-            feature_hashes.append(graph_hash)
-        
-        hash_counts = Counter(feature_hashes)
-        duplicates = sum(1 for count in hash_counts.values() if count > 1)
-        if duplicates > 0:
-            issues.append(f"Found {duplicates} potential duplicate graphs")
-            print(f"⚠️  Found {duplicates} potential duplicate graphs")
-        else:
-            print("✅ No obvious duplicates found")
-        
-        # Check for degenerate graphs
-        print("\n🔍 Checking for degenerate graphs...")
-        degenerate_count = 0
-        for meta in metadata:
-            if meta['num_nodes'] <= 1 or meta['num_edges'] == 0:
-                degenerate_count += 1
-        
-        if degenerate_count > 0:
-            issues.append(f"Found {degenerate_count} degenerate graphs (≤1 node or 0 edges)")
-            print(f"⚠️  Found {degenerate_count} degenerate graphs")
-        else:
-            print("✅ No degenerate graphs found")
-        
-        # Check feature quality
-        print("\n🔍 Checking feature quality...")
-        all_zero_features = 0
-        identical_feature_graphs = 0
+        # Analyze by graph characteristics
+        vulnerable_graphs = []
+        safe_graphs = []
         
         for i, data in enumerate(dataset):
-            # Check for all-zero features
-            if (data.x == 0).all():
-                all_zero_features += 1
+            label = true_labels[i]
+            graph_info = {
+                'index': i,
+                'label': label,
+                'num_nodes': data.x.shape[0],
+                'num_edges': data.edge_index.shape[1],
+                'feature_mean': data.x.mean().item(),
+                'feature_std': data.x.std().item(),
+                'zero_ratio': (data.x == 0).float().mean().item()
+            }
             
-            # Check for identical features across all nodes
-            if data.x.shape[0] > 1:
-                unique_features = torch.unique(data.x, dim=0).shape[0]
-                if unique_features == 1:
-                    identical_feature_graphs += 1
+            if label == 1:  # Vulnerable
+                vulnerable_graphs.append(graph_info)
+            else:  # Safe
+                safe_graphs.append(graph_info)
         
-        if all_zero_features > 0:
-            issues.append(f"Found {all_zero_features} graphs with all-zero features")
-            print(f"⚠️  Found {all_zero_features} graphs with all-zero features")
+        # Compare characteristics
+        vuln_nodes = [g['num_nodes'] for g in vulnerable_graphs]
+        safe_nodes = [g['num_nodes'] for g in safe_graphs]
         
-        if identical_feature_graphs > 0:
-            issues.append(f"Found {identical_feature_graphs} graphs where all nodes have identical features")
-            print(f"⚠️  Found {identical_feature_graphs} graphs with identical node features")
+        vuln_edges = [g['num_edges'] for g in vulnerable_graphs]
+        safe_edges = [g['num_edges'] for g in safe_graphs]
         
-        if not issues:
-            print("✅ No major data quality issues detected")
+        print(f"\n📊 Graph Characteristics by Label:")
+        print(f"Vulnerable graphs: {len(vulnerable_graphs)}")
+        print(f"  - Avg nodes: {np.mean(vuln_nodes):.1f} ± {np.std(vuln_nodes):.1f}")
+        print(f"  - Avg edges: {np.mean(vuln_edges):.1f} ± {np.std(vuln_edges):.1f}")
         
-        return issues
+        print(f"Safe graphs: {len(safe_graphs)}")
+        print(f"  - Avg nodes: {np.mean(safe_nodes):.1f} ± {np.std(safe_nodes):.1f}")
+        print(f"  - Avg edges: {np.mean(safe_edges):.1f} ± {np.std(safe_edges):.1f}")
+        
+        # Show examples
+        print(f"\n🔍 Vulnerable Graph Examples (first 5):")
+        for graph in vulnerable_graphs[:5]:
+            print(f"Graph {graph['index']}: {graph['num_nodes']} nodes, "
+                  f"{graph['num_edges']} edges, zero_ratio={graph['zero_ratio']:.2%}")
+        
+        print(f"\n🔍 Safe Graph Examples (first 5):")
+        for graph in safe_graphs[:5]:
+            print(f"Graph {graph['index']}: {graph['num_nodes']} nodes, "
+                  f"{graph['num_edges']} edges, zero_ratio={graph['zero_ratio']:.2%}")
+        
+        return {
+            'true_distribution': dict(true_dist),
+            'predicted_distribution': dict(pred_dist),
+            'vulnerable_examples': vulnerable_graphs[:5],
+            'safe_examples': safe_graphs[:5],
+            'vulnerable_stats': {
+                'count': len(vulnerable_graphs),
+                'avg_nodes': float(np.mean(vuln_nodes)),
+                'std_nodes': float(np.std(vuln_nodes)),
+                'avg_edges': float(np.mean(vuln_edges)),
+                'std_edges': float(np.std(vuln_edges))
+            },
+            'safe_stats': {
+                'count': len(safe_graphs),
+                'avg_nodes': float(np.mean(safe_nodes)),
+                'std_nodes': float(np.std(safe_nodes)),
+                'avg_edges': float(np.mean(safe_edges)),
+                'std_edges': float(np.std(safe_edges))
+            }
+        }
     
-    def generate_solvability_report(self, all_results):
-        """Generate final solvability assessment"""
-        print("\n" + "="*80)
-        print("TASK SOLVABILITY ASSESSMENT")
-        print("="*80)
+    def investigate_data_pipeline(self, dataset):
+        """Investigate where the data pipeline might be failing"""
+        print("\n=== DATA PIPELINE INVESTIGATION ===")
         
-        # Collect all findings
-        report = {
+        # Try to trace back to original data
+        try:
+            # Check if we can access raw CPG data
+            paths = configs.Paths()
+            raw_path = Path(paths.raw) if hasattr(paths, 'raw') else None
+            cpg_path = Path(paths.cpg) if hasattr(paths, 'cpg') else None
+            
+            print(f"Raw data path: {raw_path}")
+            print(f"CPG data path: {cpg_path}")
+            
+            # Check input files
+            input_files = list(Path(self.data_dir).glob('*.pkl'))
+            print(f"Input files found: {len(input_files)}")
+            
+            # Sample one file to inspect
+            if input_files:
+                sample_file = input_files[0]
+                print(f"Inspecting: {sample_file}")
+                
+                df = pd.read_pickle(sample_file)
+                print(f"DataFrame shape: {df.shape}")
+                print(f"Columns: {list(df.columns)}")
+                
+                if 'input' in df.columns:
+                    sample_graph = df['input'].iloc[0]
+                    print(f"Sample graph type: {type(sample_graph)}")
+                    print(f"Sample graph attributes: {dir(sample_graph)}")
+                    
+                    if hasattr(sample_graph, 'x'):
+                        print(f"Features shape: {sample_graph.x.shape}")
+                        print(f"Feature range: [{sample_graph.x.min():.3f}, {sample_graph.x.max():.3f}]")
+                        print(f"Feature mean: {sample_graph.x.mean():.3f}")
+                        print(f"Zero ratio: {(sample_graph.x == 0).float().mean():.2%}")
+        
+        except Exception as e:
+            print(f"Error investigating pipeline: {e}")
+        
+        return {
+            'input_files_count': len(input_files) if 'input_files' in locals() else 0,
+            'pipeline_status': 'investigated'
+        }
+    
+    def run_full_investigation(self):
+        """Run complete task solvability investigation"""
+        print("=" * 80)
+        print("TASK SOLVABILITY INVESTIGATION")
+        print("=" * 80)
+        
+        # Load data and predictions
+        dataset, predictions, true_labels, confidences = self.load_dataset_with_predictions()
+        
+        # Run all analyses
+        misclass_analysis = self.analyze_misclassifications(dataset, predictions, true_labels, confidences)
+        feature_analysis = self.inspect_feature_quality(dataset)
+        label_analysis = self.analyze_label_distribution(dataset, predictions, true_labels)
+        pipeline_analysis = self.investigate_data_pipeline(dataset)
+        
+        # Compile results
+        self.results = {
             'timestamp': datetime.now().isoformat(),
-            'dataset_size': len(all_results.get('metadata', [])),
-            'findings': all_results,
-            'assessment': {}
+            'dataset_size': len(dataset),
+            'misclassification_analysis': misclass_analysis,
+            'feature_quality_analysis': feature_analysis,
+            'label_distribution_analysis': label_analysis,
+            'pipeline_investigation': pipeline_analysis
         }
         
-        # Make assessment
-        assessment = report['assessment']
+        # Generate conclusions
+        self.generate_conclusions()
         
-        # Check if task appears solvable
-        if 'data_quality_issues' in all_results and all_results['data_quality_issues']:
-            assessment['data_quality'] = 'POOR - Multiple issues detected'
-            assessment['solvability'] = 'LOW'
-        else:
-            assessment['data_quality'] = 'ACCEPTABLE'
-        
-        # Check feature discriminability
-        vulnerable_meta = all_results.get('vulnerable_samples', [])
-        safe_meta = all_results.get('safe_samples', [])
-        
-        if vulnerable_meta and safe_meta:
-            # Compare average metrics
-            vuln_nodes = np.mean([m['num_nodes'] for m in vulnerable_meta])
-            safe_nodes = np.mean([m['num_nodes'] for m in safe_meta])
-            node_diff = abs(vuln_nodes - safe_nodes) / max(vuln_nodes, safe_nodes)
-            
-            vuln_features = np.mean([m['avg_node_feature'] for m in vulnerable_meta])
-            safe_features = np.mean([m['avg_node_feature'] for m in safe_meta])
-            feature_diff = abs(vuln_features - safe_features) / max(abs(vuln_features), abs(safe_features))
-            
-            if node_diff > 0.1 or feature_diff > 0.1:
-                assessment['feature_discriminability'] = 'MODERATE'
-            else:
-                assessment['feature_discriminability'] = 'LOW'
-        
-        # Overall assessment
-        if assessment.get('data_quality') == 'POOR':
-            assessment['overall'] = 'NOT SOLVABLE - Fix data quality first'
-        elif assessment.get('feature_discriminability') == 'LOW':
-            assessment['overall'] = 'DIFFICULT - Need better features'
-        else:
-            assessment['overall'] = 'POTENTIALLY SOLVABLE - Investigate further'
-        
-        print(f"📋 FINAL ASSESSMENT:")
-        print(f"Data Quality: {assessment.get('data_quality', 'UNKNOWN')}")
-        print(f"Feature Discriminability: {assessment.get('feature_discriminability', 'UNKNOWN')}")
-        print(f"Overall Solvability: {assessment.get('overall', 'UNKNOWN')}")
-        
-        # Save report
-        with open('task_solvability_report.json', 'w') as f:
-            json.dump(report, f, indent=2, default=str)
-        
-        print(f"\n✅ Full report saved to: task_solvability_report.json")
-        
-        return assessment
+        # Save results
+        self.save_results()
     
-    def run_full_validation(self):
-        """Run complete task validation"""
-        print("🔬 STARTING COMPREHENSIVE TASK SOLVABILITY VALIDATION")
-        print("="*80)
+    def generate_conclusions(self):
+        """Generate actionable conclusions"""
+        print("\n" + "=" * 80)
+        print("CONCLUSIONS & RECOMMENDATIONS")
+        print("=" * 80)
         
-        all_results = {}
+        feature_analysis = self.results['feature_quality_analysis']
+        misclass_analysis = self.results['misclassification_analysis']
         
-        # 1. Load data
-        dataset, metadata = self.load_dataset_with_metadata()
-        all_results['metadata'] = metadata
+        conclusions = []
         
-        # 2. Analyze labels
-        vulnerable_samples, safe_samples = self.analyze_label_distribution(metadata)
-        all_results['vulnerable_samples'] = vulnerable_samples
-        all_results['safe_samples'] = safe_samples
+        # Feature quality assessment
+        zero_ratio = feature_analysis['zero_feature_count'] / self.results['dataset_size']
+        identical_ratio = feature_analysis['identical_feature_count'] / self.results['dataset_size']
         
-        # 3. Get model predictions
-        predictions, true_labels, confidences = self.get_model_predictions(dataset, metadata)
-        all_results['predictions'] = {
-            'predictions': predictions,
-            'true_labels': true_labels,
-            'confidences': confidences
-        }
+        if zero_ratio > 0.1:  # >10% zero features
+            conclusions.append(f"🚨 CRITICAL: {zero_ratio:.1%} of graphs have mostly zero features")
         
-        # 4. Analyze misclassifications
-        misclassified, correctly_classified = self.analyze_misclassifications(
-            dataset, metadata, predictions, true_labels, confidences
-        )
-        all_results['misclassifications'] = {
-            'misclassified': misclassified,
-            'correctly_classified': correctly_classified
-        }
+        if identical_ratio > 0.05:  # >5% identical features
+            conclusions.append(f"🚨 CRITICAL: {identical_ratio:.1%} of graphs have identical node features")
         
-        # 5. Inspect sample graphs
-        self.inspect_sample_graphs(dataset, metadata, misclassified)
+        # Performance assessment
+        accuracy = misclass_analysis['accuracy']
+        if accuracy < 0.55:  # <55% accuracy
+            conclusions.append(f"🚨 CRITICAL: Model accuracy ({accuracy:.1%}) barely above random")
         
-        # 6. Compare vulnerable vs safe
-        self.compare_vulnerable_vs_safe_samples(dataset, vulnerable_samples, safe_samples)
+        # Print conclusions
+        print("\n🎯 KEY FINDINGS:")
+        for i, conclusion in enumerate(conclusions, 1):
+            print(f"{i}. {conclusion}")
         
-        # 7. Check data quality
-        data_issues = self.check_data_quality_issues(dataset, metadata)
-        all_results['data_quality_issues'] = data_issues
+        # Recommendations
+        print(f"\n💡 RECOMMENDATIONS:")
         
-        # 8. Generate final assessment
-        assessment = self.generate_solvability_report(all_results)
+        if zero_ratio > 0.1 or identical_ratio > 0.05:
+            print("1. 🔧 FIX FEATURE PIPELINE: Features are corrupted/missing")
+            print("   - Check Word2Vec model quality")
+            print("   - Verify token extraction from CPG")
+            print("   - Debug NodesEmbedding class")
         
-        return assessment
+        if accuracy < 0.55:
+            print("2. 📊 TASK DIFFICULTY: Current features insufficient")
+            print("   - Add domain-specific features (API calls, patterns)")
+            print("   - Consider different code representations")
+            print("   - Verify label quality")
+        
+        print("3. 🔍 IMMEDIATE ACTIONS:")
+        print("   - Run investigate_zero_features.py to trace corruption")
+        print("   - Manually inspect 10 vulnerable vs safe examples")
+        print("   - Check inter-annotator agreement on labels")
+        
+        self.results['conclusions'] = conclusions
+    
+    def save_results(self):
+        """Save investigation results"""
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"task_solvability_report.json"
+        
+        with open(filename, 'w') as f:
+            json.dump(self.results, f, indent=2)
+        
+        print(f"\n✓ Full investigation report saved to: {filename}")
 
 def main():
     """Main execution"""
-    validator = TaskValidator()
-    assessment = validator.run_full_validation()
-    
-    print(f"\n🎯 SUMMARY:")
-    print(f"The vulnerability detection task appears to be: {assessment.get('overall', 'UNKNOWN')}")
+    investigator = TaskSolvabilityInvestigator()
+    investigator.run_full_investigation()
 
 if __name__ == "__main__":
     main()

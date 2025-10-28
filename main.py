@@ -403,6 +403,301 @@ def process_task(stopping):
     process.predict(model, test_loader_step)
 
 
+def run_test_pipeline():
+    """
+    Test pipeline function that processes the mini dataset with detailed logging
+    Traces the complete pipeline: JSON → CPG → tokens → embedding → input PKL
+    """
+    print("=" * 80)
+    print("RUNNING TEST PIPELINE ON MINI DATASET")
+    print("=" * 80)
+    
+    # Create test output directory
+    test_output_dir = Path("data/test_output")
+    test_output_dir.mkdir(exist_ok=True)
+    
+    # Stage 1: Load test dataset
+    print("\n🔄 STAGE 1: Loading test dataset...")
+    test_dataset_path = "data/dataset_test_mini.json"
+    
+    try:
+        import json
+        with open(test_dataset_path, 'r') as f:
+            test_data = json.load(f)
+        
+        print(f"✓ Loaded {len(test_data)} test samples")
+        print(f"Sample data structure: {list(test_data[0].keys())}")
+        print(f"First sample: {test_data[0]['func'][:100]}...")
+        
+        # Convert to DataFrame
+        test_df = pd.DataFrame(test_data)
+        print(f"✓ Created DataFrame with shape: {test_df.shape}")
+        print(f"Target distribution: {test_df['target'].value_counts().to_dict()}")
+        
+    except Exception as e:
+        print(f"❌ Error loading test dataset: {e}")
+        return
+    
+    # Stage 2: Create CPG files
+    print("\n🔄 STAGE 2: Creating CPG files...")
+    
+    try:
+        context = configs.Create()
+        
+        # Create .c files for Joern
+        data.to_files(test_df, PATHS.joern)
+        print(f"✓ Created .c files in {PATHS.joern}")
+        
+        # Check created files
+        c_files = list(Path(PATHS.joern).glob("*.c"))
+        print(f"✓ Created {len(c_files)} .c files")
+        for f in c_files[:3]:  # Show first 3
+            print(f"  - {f.name}")
+        
+        # Generate CPG
+        cpg_file = prepare.joern_parse(context.joern_cli_dir, PATHS.joern, PATHS.cpg, "test_cpg")
+        print(f"✓ Generated CPG file: {cpg_file}")
+        
+        # Clean up joern files
+        shutil.rmtree(PATHS.joern)
+        
+    except Exception as e:
+        print(f"❌ Error creating CPG: {e}")
+        return
+    
+    # Stage 3: Process CPG to JSON
+    print("\n🔄 STAGE 3: Processing CPG to JSON...")
+    
+    try:
+        # Create JSON from CPG
+        json_files = prepare.joern_create(context.joern_cli_dir, PATHS.cpg, PATHS.cpg, [cpg_file])
+        print(f"✓ Created JSON files: {json_files}")
+        
+        if json_files and json_files[0]:
+            # Process JSON to graphs
+            graphs = prepare.json_process(PATHS.cpg, json_files[0])
+            print(f"✓ Processed {len(graphs) if graphs else 0} graphs from JSON")
+            
+            if graphs:
+                print(f"Sample graph keys: {list(graphs[0].keys()) if graphs else 'None'}")
+                
+                # Create dataset with CPG
+                dataset = data.create_with_index(graphs, ["Index", "cpg"])
+                dataset = data.inner_join_by_index(test_df, dataset)
+                
+                print(f"✓ Created CPG dataset with {len(dataset)} samples")
+                print(f"Dataset columns: {list(dataset.columns)}")
+                
+                # Save CPG dataset
+                cpg_output_path = test_output_dir / "test_cpg.pkl"
+                data.write(dataset, str(test_output_dir), "test_cpg.pkl")
+                print(f"✓ Saved CPG dataset to: {cpg_output_path}")
+                
+            else:
+                print("❌ No graphs generated from JSON")
+                return
+        else:
+            print("❌ No JSON files created")
+            return
+            
+    except Exception as e:
+        print(f"❌ Error processing CPG to JSON: {e}")
+        return
+    
+    # Stage 4: Tokenization
+    print("\n🔄 STAGE 4: Tokenizing functions...")
+    
+    try:
+        # Convert function dicts to code strings
+        dataset['code_str'] = dataset['func'].apply(
+            lambda x: x.get('function', '') if isinstance(x, dict) else str(x)
+        )
+        
+        print(f"✓ Converted functions to code strings")
+        print(f"Sample code string: {dataset['code_str'].iloc[0][:100]}...")
+        
+        # Tokenize
+        tokens_dataset = data.tokenize(
+            dataset[['code_str']].rename(columns={'code_str': 'func'})
+        )
+        
+        # Filter out empty token lists
+        tokens_dataset = tokens_dataset[tokens_dataset['tokens'].map(len) > 0]
+        
+        print(f"✓ Tokenized {len(tokens_dataset)} functions")
+        print(f"Sample tokens: {tokens_dataset['tokens'].iloc[0][:10]}...")
+        
+        # Save tokens
+        tokens_output_path = test_output_dir / "test_tokens.pkl"
+        data.write(tokens_dataset, str(test_output_dir), "test_tokens.pkl")
+        print(f"✓ Saved tokens to: {tokens_output_path}")
+        
+    except Exception as e:
+        print(f"❌ Error in tokenization: {e}")
+        return
+    
+    # Stage 5: Word2Vec Training and Embedding
+    print("\n🔄 STAGE 5: Word2Vec training and embedding...")
+    
+    try:
+        context = configs.Embed()
+        
+        # Initialize Word2Vec model
+        w2vmodel = Word2Vec(**context.w2v_args)
+        
+        # Build vocabulary and train
+        print("Building vocabulary...")
+        w2vmodel.build_vocab(corpus_iterable=tokens_dataset.tokens)
+        print(f"✓ Built vocabulary with {len(w2vmodel.wv.key_to_index)} words")
+        
+        print("Training Word2Vec model...")
+        w2vmodel.train(
+            corpus_iterable=tokens_dataset.tokens,
+            total_examples=len(tokens_dataset),
+            epochs=w2vmodel.epochs
+        )
+        print(f"✓ Trained Word2Vec model")
+        
+        # Save Word2Vec model
+        w2v_output_path = test_output_dir / "test_w2v.model"
+        w2vmodel.save(str(w2v_output_path))
+        print(f"✓ Saved Word2Vec model to: {w2v_output_path}")
+        
+        # Test some embeddings
+        sample_tokens = tokens_dataset['tokens'].iloc[0][:5]
+        print(f"Testing embeddings for tokens: {sample_tokens}")
+        for token in sample_tokens:
+            if token in w2vmodel.wv:
+                embedding = w2vmodel.wv[token]
+                print(f"  {token}: shape={embedding.shape}, mean={embedding.mean():.3f}")
+            else:
+                print(f"  {token}: NOT FOUND in vocabulary")
+        
+    except Exception as e:
+        print(f"❌ Error in Word2Vec training: {e}")
+        return
+    
+    # Stage 6: CPG Node Processing
+    print("\n🔄 STAGE 6: Processing CPG nodes...")
+    
+    try:
+        # Ensure cpg column contains dicts
+        dataset['cpg'] = dataset['cpg'].apply(lambda x: x if isinstance(x, dict) else None)
+        dataset = dataset.dropna(subset=['cpg'])
+        print(f"✓ Filtered to {len(dataset)} samples with valid CPG")
+        
+        # Parse CPG to nodes
+        print("Parsing CPG to nodes...")
+        dataset["nodes"] = dataset['cpg'].apply(
+            lambda x: cpg.parse_to_nodes(x, context.nodes_dim) if isinstance(x, dict) else {}
+        )
+        
+        # Remove rows with no nodes
+        dataset = dataset.loc[dataset.nodes.map(len) > 0]
+        print(f"✓ Parsed nodes for {len(dataset)} samples")
+        
+        if len(dataset) > 0:
+            sample_nodes = dataset['nodes'].iloc[0]
+            print(f"Sample nodes: type={type(sample_nodes)}, count={len(sample_nodes) if hasattr(sample_nodes, '__len__') else 'N/A'}")
+            
+            if hasattr(sample_nodes, '__iter__') and not isinstance(sample_nodes, (str, dict)):
+                first_node = list(sample_nodes)[0]
+                node_dict = first_node if isinstance(first_node, dict) else first_node.__dict__
+                print(f"First node keys: {list(node_dict.keys())}")
+        
+    except Exception as e:
+        print(f"❌ Error processing CPG nodes: {e}")
+        return
+    
+    # Stage 7: Create Input Tensors
+    print("\n🔄 STAGE 7: Creating input tensors...")
+    
+    try:
+        print("Converting nodes to input tensors...")
+        dataset["input"] = dataset.apply(
+            lambda row: prepare.nodes_to_input(
+                row.nodes, row.target, context.nodes_dim, w2vmodel.wv, context.edge_type
+            ),
+            axis=1
+        )
+        
+        print(f"✓ Created input tensors for {len(dataset)} samples")
+        
+        # Analyze the created inputs
+        print("\n📊 INPUT TENSOR ANALYSIS:")
+        for idx, row in dataset.head(3).iterrows():
+            sample_input = row['input']
+            print(f"\nSample {idx} (target={row['target']}):")
+            
+            if hasattr(sample_input, 'x'):
+                x_shape = sample_input.x.shape
+                x_mean = sample_input.x.mean().item()
+                x_std = sample_input.x.std().item()
+                x_zero_ratio = (sample_input.x == 0).float().mean().item()
+                
+                print(f"  Features (x): shape={x_shape}, mean={x_mean:.3f}, std={x_std:.3f}, zero_ratio={x_zero_ratio:.2%}")
+                
+                # Check for zero features
+                if x_zero_ratio > 0.9:
+                    print(f"  ⚠️  WARNING: {x_zero_ratio:.1%} of features are zero!")
+                elif x_zero_ratio > 0.5:
+                    print(f"  ⚠️  CAUTION: {x_zero_ratio:.1%} of features are zero")
+                else:
+                    print(f"  ✓ Feature quality looks good")
+            
+            if hasattr(sample_input, 'edge_index'):
+                edge_shape = sample_input.edge_index.shape
+                print(f"  Edges: shape={edge_shape}")
+            
+            if hasattr(sample_input, 'y'):
+                print(f"  Label: {sample_input.y.item()}")
+        
+        # Save final input dataset
+        final_output_path = test_output_dir / "test_input.pkl"
+        data.write(dataset[["input", "target"]], str(test_output_dir), "test_input.pkl")
+        print(f"\n✓ Saved final input dataset to: {final_output_path}")
+        
+    except Exception as e:
+        print(f"❌ Error creating input tensors: {e}")
+        return
+    
+    # Stage 8: Final Summary
+    print("\n" + "=" * 80)
+    print("TEST PIPELINE SUMMARY")
+    print("=" * 80)
+    
+    print(f"✅ Successfully processed {len(dataset)} samples")
+    print(f"📁 Output directory: {test_output_dir}")
+    print(f"📊 Target distribution: {dataset['target'].value_counts().to_dict()}")
+    
+    # Check for feature corruption
+    zero_count = 0
+    normal_count = 0
+    
+    for _, row in dataset.iterrows():
+        sample_input = row['input']
+        if hasattr(sample_input, 'x'):
+            zero_ratio = (sample_input.x == 0).float().mean().item()
+            if zero_ratio > 0.9:
+                zero_count += 1
+            else:
+                normal_count += 1
+    
+    print(f"\n🔍 FEATURE QUALITY CHECK:")
+    print(f"  Normal features: {normal_count}")
+    print(f"  Zero features: {zero_count}")
+    
+    if zero_count > 0:
+        print(f"  ⚠️  {zero_count}/{len(dataset)} samples have corrupted features!")
+    else:
+        print(f"  ✅ All samples have normal features")
+    
+    print(f"\n💡 Next steps:")
+    print(f"  1. Check files in: {test_output_dir}")
+    print(f"  2. Compare with corrupted production data")
+    print(f"  3. Identify where corruption occurs in production pipeline")
+
+
 def main():
     """
     main function that executes tasks based on command-line options
@@ -413,6 +708,7 @@ def main():
     parser.add_argument('-e', '--embed', action='store_true')
     parser.add_argument('-p', '--process', action='store_true')
     parser.add_argument('-pS', '--process_stopping', action='store_true')
+    parser.add_argument('-t', '--test', action='store_true', help='Run test pipeline on mini dataset')
 
     args = parser.parse_args()
 
@@ -424,6 +720,8 @@ def main():
         process_task(False)
     if args.process_stopping:
         process_task(True)
+    if args.test:
+        run_test_pipeline()
 
 
 

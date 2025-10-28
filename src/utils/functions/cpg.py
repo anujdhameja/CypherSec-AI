@@ -295,10 +295,12 @@ def parse_to_nodes(cpg, max_nodes=500):
       - 'ast_children' (AST edges)
     
     KEY FIX: All IDs are normalized to strings for consistent lookup
+    CRITICAL FIX: Preserve original 'code' field from raw nodes
     """
     print("CPG keys:", list(cpg.keys()))
     all_nodes_orig = {}   # normalized_id -> original node object
     neighbors_map = {}    # normalized_id -> {'children': [...], 'ast_children': [...]}
+    raw_node_data = {}    # normalized_id -> original raw node dict (preserves 'code')
 
     def add_node_orig(nid, node_obj):
         """Store node with normalized ID"""
@@ -365,6 +367,13 @@ def parse_to_nodes(cpg, max_nodes=500):
     elif "nodes" in cpg:
         print("Found top-level 'nodes' in CPG")
         valid_nodes = [n for n in cpg["nodes"] if isinstance(n, (dict, object))]
+        
+        # CRITICAL FIX: Store original raw node data before processing
+        for raw_node in valid_nodes:
+            if isinstance(raw_node, dict) and 'id' in raw_node:
+                raw_id = _normalize_id(raw_node['id'])
+                raw_node_data[raw_id] = raw_node  # Preserve original dict with 'code'
+        
         func = Function({"nodes": valid_nodes, "edges": cpg.get("edges", [])})
         filtered = filter_nodes(func.get_nodes())
 
@@ -438,6 +447,12 @@ def parse_to_nodes(cpg, max_nodes=500):
         node_dict['id'] = normalized_id
         node_dict.setdefault('children', [])
         node_dict.setdefault('ast_children', [])
+
+        # CRITICAL FIX: Restore original 'code' field from raw node data
+        if normalized_id in raw_node_data:
+            original_raw = raw_node_data[normalized_id]
+            if 'code' in original_raw:
+                node_dict['code'] = original_raw['code']  # Restore the code field!
 
         # CRITICAL: Attach neighbors using normalized ID
         neigh = neighbors_map.get(normalized_id, {})

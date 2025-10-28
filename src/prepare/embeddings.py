@@ -376,11 +376,10 @@ class NodesEmbedding:
                 code_text = ""
                 empty_count += 1
 
-            # Tokenize safely
+            # Tokenize using the SAME function as training phase
             try:
-                tokens = self._tok_re.findall(code_text)
-            except TypeError as e:
-                # This should never happen now, but just in case
+                tokens = tokenizer(code_text)  # This applies FUN1/VAR1 conversion
+            except Exception as e:
                 print(f"⚠️ Tokenization error for node {nid}: {e}")
                 print(f"   code_text type: {type(code_text)}, value: {repr(code_text)[:100]}")
                 tokens = []
@@ -459,8 +458,8 @@ class NodesEmbedding:
             if not code_text:
                 code_text = ''
 
-            # Tokenize and vectorize
-            tokens = self._tok_re.findall(code_text or "")
+            # Tokenize using the SAME function as training phase
+            tokens = tokenizer(code_text or "")
             token_vecs = []
             for t in tokens:
                 try:

@@ -35,7 +35,9 @@ def load(path, pickle_file, ratio=1):
 
 
 def write(data_frame: pd.DataFrame, path, file_name):
-    data_frame.to_pickle(path + file_name)
+    import os
+    full_path = os.path.join(path, file_name)
+    data_frame.to_pickle(full_path)
 
 
 def apply_filter(data_frame: pd.DataFrame, filter_func):
