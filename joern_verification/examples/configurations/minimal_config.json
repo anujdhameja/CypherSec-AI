@@ -1,0 +1,25 @@
+{
+  "_description": "Minimal configuration for basic testing and validation",
+  "_usage": "Bare minimum settings for quick setup and testing",
+  
+  "system": {
+    "joern_path": "joern-cli",
+    "output_base_dir": "output",
+    "temp_dir": "temp",
+    "max_concurrent_tests": 1,
+    "cleanup_temp_files": true,
+    "verbose_logging": false
+  },
+  
+  "languages": {
+    "python": {
+      "name": "Python",
+      "file_extension": ".py",
+      "tool_name": "pysrc2cpg.bat",
+      "command_template": "{tool_path} {memory_allocation} {input_file} --output {output_dir}",
+      "memory_allocation": "-J-Xmx2g",
+      "timeout_seconds": 60,
+      "alternative_tools": ["tree-sitter"]
+    }
+  }
+}

@@ -1,0 +1,177 @@
+{
+  "metadata": {
+    "title": "Joern Multi-Language Verification Report",
+    "generated_at": "2025-10-29T12:30:59.060497",
+    "joern_version": null,
+    "system_info": null,
+    "total_languages": 3,
+    "successful_languages": 0,
+    "failed_languages": 3,
+    "execution_time": 3.0,
+    "report_version": "1.0"
+  },
+  "executive_summary": {
+    "title": "Executive Summary",
+    "content": {
+      "overview": "Tested 3 programming languages with Joern CPG generation",
+      "success_rate": "0.0%",
+      "successful_languages": 0,
+      "failed_languages": 3,
+      "key_findings": [
+        "Low success rate of 0.0% requires attention",
+        "Performance range: python (1.00s) to python (1.00s)"
+      ],
+      "recommendation_count": 3
+    },
+    "section_type": "summary"
+  },
+  "language_summaries": [
+    {
+      "language": "c",
+      "status": "failure",
+      "execution_time": 1.0,
+      "success_rate": 0.0,
+      "error_count": 0,
+      "warning_count": 0,
+      "output_files": 0,
+      "recommendations": [
+        "Review error messages for specific issues",
+        "Verify input file format and content",
+        "Check Joern tool configuration"
+      ],
+      "category": "failure",
+      "performance_class": "excellent"
+    },
+    {
+      "language": "java",
+      "status": "failure",
+      "execution_time": 1.0,
+      "success_rate": 0.0,
+      "error_count": 0,
+      "warning_count": 0,
+      "output_files": 0,
+      "recommendations": [
+        "Review error messages for specific issues",
+        "Verify input file format and content",
+        "Check Joern tool configuration"
+      ],
+      "category": "failure",
+      "performance_class": "excellent"
+    },
+    {
+      "language": "python",
+      "status": "failure",
+      "execution_time": 1.0,
+      "success_rate": 0.0,
+      "error_count": 0,
+      "warning_count": 0,
+      "output_files": 0,
+      "recommendations": [
+        "Review error messages for specific issues",
+        "Verify input file format and content",
+        "Check Joern tool configuration"
+      ],
+      "category": "failure",
+      "performance_class": "excellent"
+    }
+  ],
+  "performance_analysis": {
+    "overall_success_rate": 0.0,
+    "average_execution_time": 1.0,
+    "fastest_language": "python",
+    "slowest_language": "c",
+    "most_reliable_language": "python",
+    "least_reliable_language": "c",
+    "performance_rankings": [
+      [
+        "python",
+        1.0
+      ],
+      [
+        "java",
+        1.0
+      ],
+      [
+        "c",
+        1.0
+      ]
+    ],
+    "reliability_rankings": [
+      [
+        "python",
+        0
+      ],
+      [
+        "java",
+        0
+      ],
+      [
+        "c",
+        0
+      ]
+    ],
+    "resource_usage": {},
+    "trends": {
+      "average_time": 1.0,
+      "consistency": "consistent",
+      "coefficient_of_variation": 0.0,
+      "performance_spread": 0.0
+    }
+  },
+  "error_analysis": {
+    "total_errors": 0,
+    "error_categories": {},
+    "common_errors": [],
+    "languages_with_errors": [],
+    "resolution_suggestions": {},
+    "critical_issues": []
+  },
+  "recommendations": {
+    "immediate_actions": [
+      "Investigate common failure patterns to improve overall success rate"
+    ],
+    "performance_improvements": [
+      "Focus optimization on c"
+    ],
+    "reliability_enhancements": [
+      "Investigate setup issues for: python, java, c"
+    ],
+    "alternative_tools": {
+      "python": [
+        "Consider tree-sitter parser",
+        "Explore language-specific AST tools",
+        "Check for updated Joern language frontends"
+      ],
+      "java": [
+        "Consider tree-sitter parser",
+        "Explore language-specific AST tools",
+        "Check for updated Joern language frontends"
+      ],
+      "c": [
+        "Consider tree-sitter parser",
+        "Explore language-specific AST tools",
+        "Check for updated Joern language frontends"
+      ]
+    },
+    "next_steps": [
+      "Test with larger, more complex source files",
+      "Benchmark performance with production codebases",
+      "Set up automated verification pipeline",
+      "Document language-specific configuration requirements"
+    ],
+    "language_specific": {
+      "python": [
+        "Review error messages for specific issues",
+        "Verify input file format and content"
+      ],
+      "java": [
+        "Review error messages for specific issues",
+        "Verify input file format and content"
+      ],
+      "c": [
+        "Review error messages for specific issues",
+        "Verify input file format and content"
+      ]
+    }
+  }
+}

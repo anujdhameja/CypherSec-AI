@@ -1,0 +1,65 @@
+{
+  "_description": "Development environment configuration with debug settings",
+  "_usage": "Optimized for development workflow with verbose logging and preserved temp files",
+  
+  "system": {
+    "joern_path": "joern/joern-cli",
+    "output_base_dir": "dev_verification_output",
+    "temp_dir": "dev_temp_files",
+    "max_concurrent_tests": 1,
+    "cleanup_temp_files": false,
+    "verbose_logging": true
+  },
+  
+  "languages": {
+    "python": {
+      "name": "Python",
+      "file_extension": ".py",
+      "tool_name": "pysrc2cpg.bat",
+      "command_template": "{tool_path} {memory_allocation} {input_file} --output {output_dir}",
+      "memory_allocation": "-J-Xmx2g",
+      "timeout_seconds": 120,
+      "alternative_tools": ["tree-sitter", "ast", "libcst"]
+    },
+    
+    "java": {
+      "name": "Java",
+      "file_extension": ".java",
+      "tool_name": "javasrc2cpg.bat",
+      "command_template": "{tool_path} {memory_allocation} {input_file} --output {output_dir}",
+      "memory_allocation": "-J-Xmx2g",
+      "timeout_seconds": 180,
+      "alternative_tools": ["eclipse-jdt", "spoon", "javaparser"]
+    },
+    
+    "c": {
+      "name": "C",
+      "file_extension": ".c",
+      "tool_name": "c2cpg.bat",
+      "command_template": "{tool_path} {memory_allocation} {input_file} --output {output_dir}",
+      "memory_allocation": "-J-Xmx2g",
+      "timeout_seconds": 120,
+      "alternative_tools": ["clang", "gcc", "tree-sitter"]
+    },
+    
+    "cpp": {
+      "name": "C++",
+      "file_extension": ".cpp",
+      "tool_name": "c2cpg.bat",
+      "command_template": "{tool_path} {memory_allocation} {input_file} --output {output_dir}",
+      "memory_allocation": "-J-Xmx2g",
+      "timeout_seconds": 150,
+      "alternative_tools": ["clang++", "g++", "tree-sitter"]
+    },
+    
+    "javascript": {
+      "name": "JavaScript",
+      "file_extension": ".js",
+      "tool_name": "jssrc2cpg.bat",
+      "command_template": "{tool_path} {memory_allocation} {input_file} --output {output_dir}",
+      "memory_allocation": "-J-Xmx2g",
+      "timeout_seconds": 90,
+      "alternative_tools": ["babel", "acorn", "tree-sitter"]
+    }
+  }
+}

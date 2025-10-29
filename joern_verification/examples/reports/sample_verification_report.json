@@ -1,0 +1,258 @@
+{
+  "report_metadata": {
+    "generated_at": "2024-10-29T14:30:45.123Z",
+    "system_info": {
+      "joern_version": "1.2.0",
+      "joern_path": "joern/joern-cli",
+      "python_version": "3.9.7",
+      "platform": "Windows-10-10.0.19044-SP0"
+    },
+    "configuration": {
+      "max_concurrent_tests": 1,
+      "timeout_seconds": 300,
+      "memory_allocation": "-J-Xmx4g",
+      "cleanup_temp_files": true
+    },
+    "execution_time": 45.67,
+    "total_languages_tested": 5
+  },
+  
+  "summary": {
+    "total_languages": 5,
+    "successful": 4,
+    "failed": 1,
+    "success_rate": 80.0,
+    "total_execution_time": 45.67,
+    "average_execution_time": 9.13
+  },
+  
+  "results": [
+    {
+      "language": "Python",
+      "category": "success",
+      "success": true,
+      "execution_time": 8.45,
+      "memory_usage": "512MB",
+      "input_file": "temp_test_files/test_sample.py",
+      "output_dir": "verification_output/python",
+      "output_files": [
+        "verification_output/python/cpg.bin",
+        "verification_output/python/schema.json"
+      ],
+      "metrics": {
+        "cpg_nodes": 156,
+        "cpg_edges": 234,
+        "file_size_kb": 2.3,
+        "lines_of_code": 89
+      },
+      "warnings": [],
+      "errors": [],
+      "recommendations": [
+        "CPG generation successful",
+        "Consider using tree-sitter for additional AST analysis"
+      ]
+    },
+    
+    {
+      "language": "Java",
+      "category": "success",
+      "success": true,
+      "execution_time": 12.34,
+      "memory_usage": "768MB",
+      "input_file": "temp_test_files/test_sample.java",
+      "output_dir": "verification_output/java",
+      "output_files": [
+        "verification_output/java/cpg.bin",
+        "verification_output/java/schema.json"
+      ],
+      "metrics": {
+        "cpg_nodes": 298,
+        "cpg_edges": 445,
+        "file_size_kb": 4.7,
+        "lines_of_code": 167
+      },
+      "warnings": [
+        "Unused import detected: java.util.concurrent"
+      ],
+      "errors": [],
+      "recommendations": [
+        "CPG generation successful",
+        "Java support is comprehensive",
+        "Consider using SpotBugs for additional static analysis"
+      ]
+    },
+    
+    {
+      "language": "C",
+      "category": "success",
+      "success": true,
+      "execution_time": 6.78,
+      "memory_usage": "384MB",
+      "input_file": "temp_test_files/test_sample.c",
+      "output_dir": "verification_output/c",
+      "output_files": [
+        "verification_output/c/cpg.bin",
+        "verification_output/c/schema.json"
+      ],
+      "metrics": {
+        "cpg_nodes": 187,
+        "cpg_edges": 276,
+        "file_size_kb": 3.1,
+        "lines_of_code": 134
+      },
+      "warnings": [
+        "Potential buffer overflow in strcpy usage"
+      ],
+      "errors": [],
+      "recommendations": [
+        "CPG generation successful",
+        "C support is robust",
+        "Consider using Clang Static Analyzer for additional checks"
+      ]
+    },
+    
+    {
+      "language": "JavaScript",
+      "category": "success_with_warnings",
+      "success": true,
+      "execution_time": 9.87,
+      "memory_usage": "456MB",
+      "input_file": "temp_test_files/test_sample.js",
+      "output_dir": "verification_output/javascript",
+      "output_files": [
+        "verification_output/javascript/cpg.bin",
+        "verification_output/javascript/schema.json"
+      ],
+      "metrics": {
+        "cpg_nodes": 223,
+        "cpg_edges": 334,
+        "file_size_kb": 3.8,
+        "lines_of_code": 145
+      },
+      "warnings": [
+        "Async/await patterns may not be fully represented",
+        "Dynamic property access detected"
+      ],
+      "errors": [],
+      "recommendations": [
+        "CPG generation successful with minor limitations",
+        "JavaScript support covers most ES6+ features",
+        "Consider using ESLint for additional code quality checks"
+      ]
+    },
+    
+    {
+      "language": "Go",
+      "category": "failure",
+      "success": false,
+      "execution_time": 8.23,
+      "memory_usage": "256MB",
+      "input_file": "temp_test_files/test_sample.go",
+      "output_dir": "verification_output/go",
+      "output_files": [],
+      "metrics": {
+        "cpg_nodes": 0,
+        "cpg_edges": 0,
+        "file_size_kb": 0,
+        "lines_of_code": 0
+      },
+      "warnings": [],
+      "errors": [
+        "Go frontend not available in current Joern installation",
+        "gosrc2cpg.bat not found in joern-cli directory"
+      ],
+      "recommendations": [
+        "Install Go frontend for Joern",
+        "Alternative: Use go/ast package for AST generation",
+        "Alternative: Use tree-sitter-go for syntax analysis"
+      ],
+      "alternative_tools": [
+        {
+          "name": "go/ast",
+          "description": "Go standard library AST parser",
+          "installation": "Built into Go standard library",
+          "usage": "import \"go/ast\"; import \"go/parser\""
+        },
+        {
+          "name": "tree-sitter-go",
+          "description": "Tree-sitter grammar for Go",
+          "installation": "npm install tree-sitter-go",
+          "usage": "Use with tree-sitter library"
+        }
+      ]
+    }
+  ],
+  
+  "language_support_matrix": {
+    "python": {
+      "supported": true,
+      "tool_available": true,
+      "quality": "excellent",
+      "features": ["AST", "CFG", "PDG", "data flow"]
+    },
+    "java": {
+      "supported": true,
+      "tool_available": true,
+      "quality": "excellent",
+      "features": ["AST", "CFG", "PDG", "data flow", "type information"]
+    },
+    "c": {
+      "supported": true,
+      "tool_available": true,
+      "quality": "good",
+      "features": ["AST", "CFG", "PDG", "data flow"]
+    },
+    "javascript": {
+      "supported": true,
+      "tool_available": true,
+      "quality": "good",
+      "features": ["AST", "CFG", "limited PDG"]
+    },
+    "go": {
+      "supported": false,
+      "tool_available": false,
+      "quality": "not_available",
+      "features": []
+    }
+  },
+  
+  "performance_analysis": {
+    "fastest_language": "C",
+    "slowest_language": "Java",
+    "memory_usage": {
+      "lowest": "256MB (Go - failed)",
+      "highest": "768MB (Java)",
+      "average": "475MB"
+    },
+    "cpg_complexity": {
+      "most_nodes": "Java (298 nodes)",
+      "most_edges": "Java (445 edges)",
+      "largest_file": "Java (4.7KB)"
+    }
+  },
+  
+  "recommendations": {
+    "immediate_actions": [
+      "Install Go frontend for Joern to improve language coverage",
+      "Consider increasing memory allocation for Java projects",
+      "Review JavaScript warnings for production usage"
+    ],
+    "optimization_suggestions": [
+      "Enable parallel processing for multiple language verification",
+      "Implement caching for repeated verifications",
+      "Consider using language-specific timeout values"
+    ],
+    "alternative_tools": [
+      "For Go: Use go/ast or tree-sitter-go",
+      "For Python: Consider tree-sitter-python for additional analysis",
+      "For JavaScript: ESLint provides complementary analysis"
+    ]
+  },
+  
+  "next_steps": [
+    "Install missing language frontends",
+    "Test with larger, more complex code samples",
+    "Integrate verification into CI/CD pipeline",
+    "Set up regular verification monitoring"
+  ]
+}

@@ -1,0 +1,197 @@
+version: '3.8'
+
+services:
+  # Main Joern verification service
+  joern-verification:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: joern-verification
+    volumes:
+      # Mount configuration files
+      - ./examples/configurations:/app/configurations:ro
+      # Mount output directory for results
+      - ./verification_output:/app/verification_output
+      # Mount custom test files if needed
+      - ./examples/test_files:/app/custom_test_files:ro
+      # Mount logs directory
+      - ./logs:/app/logs
+    environment:
+      - PYTHONUNBUFFERED=1
+      - JOERN_MEMORY=4g
+      - VERIFICATION_TIMEOUT=300
+      - LOG_LEVEL=INFO
+    command: >
+      python -m joern_verification.main
+      --config configurations/production_config.json
+      --report-format json markdown html
+      --log-file logs/verification.log
+      --verbose
+    networks:
+      - joern-network
+    restart: unless-stopped
+
+  # Development environment with interactive shell
+  joern-verification-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: joern-verification-dev
+    volumes:
+      - .:/app
+      - joern-cache:/app/joern-cli
+    environment:
+      - PYTHONUNBUFFERED=1
+      - DEVELOPMENT=true
+    command: /bin/bash
+    stdin_open: true
+    tty: true
+    networks:
+      - joern-network
+    profiles:
+      - dev
+
+  # Scheduled verification service
+  joern-verification-scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: joern-verification-scheduler
+    volumes:
+      - ./examples/configurations:/app/configurations:ro
+      - ./verification_output:/app/verification_output
+      - ./logs:/app/logs
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      - PYTHONUNBUFFERED=1
+      - SCHEDULE_ENABLED=true
+      - SCHEDULE_CRON=0 2 * * *  # Daily at 2 AM
+    command: python scripts/scheduler.py
+    networks:
+      - joern-network
+    restart: unless-stopped
+    profiles:
+      - scheduler
+
+  # Web dashboard for viewing results
+  joern-dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile.dashboard
+    container_name: joern-dashboard
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./verification_output:/app/data:ro
+    environment:
+      - FLASK_ENV=production
+      - DATA_DIR=/app/data
+    networks:
+      - joern-network
+    restart: unless-stopped
+    profiles:
+      - dashboard
+
+  # Database for storing verification history
+  postgres:
+    image: postgres:13-alpine
+    container_name: joern-postgres
+    environment:
+      - POSTGRES_DB=joern_verification
+      - POSTGRES_USER=joern
+      - POSTGRES_PASSWORD=joern_password
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - joern-network
+    restart: unless-stopped
+    profiles:
+      - database
+
+  # Redis for caching and job queues
+  redis:
+    image: redis:6-alpine
+    container_name: joern-redis
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    networks:
+      - joern-network
+    restart: unless-stopped
+    profiles:
+      - cache
+
+  # Monitoring with Prometheus
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: joern-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+    networks:
+      - joern-network
+    restart: unless-stopped
+    profiles:
+      - monitoring
+
+  # Grafana for visualization
+  grafana:
+    image: grafana/grafana:latest
+    container_name: joern-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    networks:
+      - joern-network
+    restart: unless-stopped
+    profiles:
+      - monitoring
+
+networks:
+  joern-network:
+    driver: bridge
+
+volumes:
+  joern-cache:
+    driver: local
+  postgres-data:
+    driver: local
+  redis-data:
+    driver: local
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local
+
+# Usage examples:
+#
+# Basic verification:
+# docker-compose up joern-verification
+#
+# Development environment:
+# docker-compose --profile dev up joern-verification-dev
+#
+# Full stack with monitoring:
+# docker-compose --profile monitoring --profile database up
+#
+# Scheduled verification:
+# docker-compose --profile scheduler up joern-verification-scheduler
+#
+# Web dashboard:
+# docker-compose --profile dashboard up joern-dashboard
+#
+# Complete setup:
+# docker-compose --profile dev --profile scheduler --profile dashboard --profile database --profile cache --profile monitoring up

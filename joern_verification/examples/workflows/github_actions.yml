@@ -1,0 +1,241 @@
+name: Joern Multi-Language Verification
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Run weekly verification on Sundays at 2 AM UTC
+    - cron: '0 2 * * 0'
+
+jobs:
+  joern-verification:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        python-version: [3.8, 3.9, '3.10']
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Set up Java
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'temurin'
+        java-version: '11'
+    
+    - name: Cache Python dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+    
+    - name: Cache Joern installation
+      uses: actions/cache@v3
+      with:
+        path: joern-cli
+        key: ${{ runner.os }}-joern-${{ hashFiles('**/joern-version.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-joern-
+    
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Download and setup Joern
+      run: |
+        if [ ! -d "joern-cli" ]; then
+          echo "Downloading Joern CLI..."
+          wget -q https://github.com/joernio/joern/releases/latest/download/joern-cli.zip
+          unzip -q joern-cli.zip
+          chmod +x joern-cli/*.bat
+          chmod +x joern-cli/*.sh
+          # Save version for cache key
+          echo "$(date +%Y%m%d)" > joern-version.txt
+        else
+          echo "Using cached Joern installation"
+        fi
+    
+    - name: Validate Joern installation
+      run: |
+        python -m joern_verification.main --validate --verbose
+    
+    - name: Run Joern verification (Quick)
+      if: github.event_name == 'pull_request'
+      run: |
+        python -m joern_verification.main \
+          --config examples/configurations/ci_cd_config.json \
+          --languages python java c \
+          --timeout 180 \
+          --continue-on-error \
+          --report-format json markdown \
+          --log-file verification.log
+    
+    - name: Run Joern verification (Comprehensive)
+      if: github.event_name == 'push' || github.event_name == 'schedule'
+      run: |
+        python -m joern_verification.main \
+          --config examples/configurations/production_config.json \
+          --timeout 600 \
+          --continue-on-error \
+          --report-format json markdown html \
+          --log-file verification.log
+    
+    - name: Check verification results
+      run: |
+        python -c "
+        import json
+        import sys
+        
+        try:
+            with open('verification_output/verification_report.json') as f:
+                report = json.load(f)
+            
+            success_rate = report['summary']['success_rate']
+            failed_languages = [r['language'] for r in report['results'] if not r['success']]
+            
+            print(f'Verification completed with {success_rate}% success rate')
+            
+            if failed_languages:
+                print(f'Failed languages: {', '.join(failed_languages)}')
+            
+            # Set success threshold
+            threshold = 75.0 if '${{ github.event_name }}' == 'pull_request' else 80.0
+            
+            if success_rate < threshold:
+                print(f'Success rate {success_rate}% is below threshold {threshold}%')
+                sys.exit(1)
+            
+            print('Verification passed!')
+            
+        except FileNotFoundError:
+            print('Verification report not found')
+            sys.exit(1)
+        except Exception as e:
+            print(f'Error checking results: {e}')
+            sys.exit(1)
+        "
+    
+    - name: Upload verification artifacts
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: joern-verification-results-py${{ matrix.python-version }}
+        path: |
+          verification_output/
+          verification.log
+        retention-days: 30
+    
+    - name: Upload verification report to GitHub Pages
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main' && matrix.python-version == '3.9'
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: verification_output
+        destination_dir: verification-reports
+    
+    - name: Comment PR with results
+      if: github.event_name == 'pull_request' && matrix.python-version == '3.9'
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const fs = require('fs');
+          
+          try {
+            const report = JSON.parse(fs.readFileSync('verification_output/verification_report.json', 'utf8'));
+            const successRate = report.summary.success_rate;
+            const totalLanguages = report.summary.total_languages;
+            const successful = report.summary.successful;
+            const failed = report.summary.failed;
+            
+            const failedLanguages = report.results
+              .filter(r => !r.success)
+              .map(r => r.language);
+            
+            let comment = `## 🔍 Joern Verification Results\n\n`;
+            comment += `- **Success Rate:** ${successRate}%\n`;
+            comment += `- **Languages Tested:** ${totalLanguages}\n`;
+            comment += `- **Successful:** ${successful}\n`;
+            comment += `- **Failed:** ${failed}\n\n`;
+            
+            if (failedLanguages.length > 0) {
+              comment += `### ❌ Failed Languages\n`;
+              failedLanguages.forEach(lang => {
+                comment += `- ${lang}\n`;
+              });
+              comment += `\n`;
+            }
+            
+            comment += `### 📊 Detailed Results\n`;
+            comment += `[View full report](${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID})\n`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+          } catch (error) {
+            console.log('Could not create PR comment:', error);
+          }
+    
+    - name: Create issue for failed verification
+      if: failure() && (github.event_name == 'push' || github.event_name == 'schedule')
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const title = `Joern Verification Failed - ${new Date().toISOString().split('T')[0]}`;
+          const body = `
+          ## Joern Multi-Language Verification Failed
+          
+          **Run:** [${process.env.GITHUB_RUN_ID}](${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID})
+          **Branch:** ${process.env.GITHUB_REF_NAME}
+          **Python Version:** ${{ matrix.python-version }}
+          **Triggered by:** ${process.env.GITHUB_EVENT_NAME}
+          
+          Please check the workflow logs and verification artifacts for details.
+          
+          ### Possible Actions
+          - Check Joern installation and configuration
+          - Review failed language frontends
+          - Update language-specific settings
+          - Check system resource availability
+          `;
+          
+          github.rest.issues.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: title,
+            body: body,
+            labels: ['bug', 'joern-verification', 'automated']
+          });
+
+  notify-slack:
+    needs: joern-verification
+    runs-on: ubuntu-latest
+    if: always() && (github.event_name == 'push' || github.event_name == 'schedule')
+    
+    steps:
+    - name: Notify Slack
+      uses: 8398a7/action-slack@v3
+      with:
+        status: ${{ needs.joern-verification.result }}
+        channel: '#code-analysis'
+        text: |
+          Joern Multi-Language Verification completed
+          Status: ${{ needs.joern-verification.result }}
+          Branch: ${{ github.ref_name }}
+          Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

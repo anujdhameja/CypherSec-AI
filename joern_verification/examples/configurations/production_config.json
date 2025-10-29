@@ -1,0 +1,125 @@
+{
+  "_description": "Production environment configuration with optimized settings",
+  "_usage": "High-performance configuration for production verification workflows",
+  
+  "system": {
+    "joern_path": "/opt/joern/joern-cli",
+    "output_base_dir": "/var/log/joern_verification",
+    "temp_dir": "/tmp/joern_verification_temp",
+    "max_concurrent_tests": 4,
+    "cleanup_temp_files": true,
+    "verbose_logging": false
+  },
+  
+  "languages": {
+    "python": {
+      "name": "Python",
+      "file_extension": ".py",
+      "tool_name": "pysrc2cpg.bat",
+      "command_template": "{tool_path} {memory_allocation} {input_file} --output {output_dir}",
+      "memory_allocation": "-J-Xmx8g",
+      "timeout_seconds": 600,
+      "alternative_tools": ["tree-sitter", "ast", "libcst"]
+    },
+    
+    "java": {
+      "name": "Java",
+      "file_extension": ".java",
+      "tool_name": "javasrc2cpg.bat",
+      "command_template": "{tool_path} {memory_allocation} {input_file} --output {output_dir}",
+      "memory_allocation": "-J-Xmx8g",
+      "timeout_seconds": 900,
+      "alternative_tools": ["eclipse-jdt", "spoon", "javaparser"]
+    },
+    
+    "c": {
+      "name": "C",
+      "file_extension": ".c",
+      "tool_name": "c2cpg.bat",
+      "command_template": "{tool_path} {memory_allocation} {input_file} --output {output_dir}",
+      "memory_allocation": "-J-Xmx8g",
+      "timeout_seconds": 600,
+      "alternative_tools": ["clang", "gcc", "tree-sitter"]
+    },
+    
+    "cpp": {
+      "name": "C++",
+      "file_extension": ".cpp",
+      "tool_name": "c2cpg.bat",
+      "command_template": "{tool_path} {memory_allocation} {input_file} --output {output_dir}",
+      "memory_allocation": "-J-Xmx8g",
+      "timeout_seconds": 720,
+      "alternative_tools": ["clang++", "g++", "tree-sitter"]
+    },
+    
+    "csharp": {
+      "name": "C#",
+      "file_extension": ".cs",
+      "tool_name": "csharpsrc2cpg.bat",
+      "command_template": "{tool_path} {memory_allocation} {input_file} --output {output_dir}",
+      "memory_allocation": "-J-Xmx8g",
+      "timeout_seconds": 600,
+      "alternative_tools": ["roslyn", "mono"]
+    },
+    
+    "javascript": {
+      "name": "JavaScript",
+      "file_extension": ".js",
+      "tool_name": "jssrc2cpg.bat",
+      "command_template": "{tool_path} {memory_allocation} {input_file} --output {output_dir}",
+      "memory_allocation": "-J-Xmx6g",
+      "timeout_seconds": 450,
+      "alternative_tools": ["babel", "acorn", "tree-sitter"]
+    },
+    
+    "kotlin": {
+      "name": "Kotlin",
+      "file_extension": ".kt",
+      "tool_name": "kotlin2cpg.bat",
+      "command_template": "{tool_path} {memory_allocation} {input_file} --output {output_dir}",
+      "memory_allocation": "-J-Xmx8g",
+      "timeout_seconds": 600,
+      "alternative_tools": ["kotlinc"]
+    },
+    
+    "php": {
+      "name": "PHP",
+      "file_extension": ".php",
+      "tool_name": "php2cpg.bat",
+      "command_template": "{tool_path} {memory_allocation} {input_file} --output {output_dir}",
+      "memory_allocation": "-J-Xmx6g",
+      "timeout_seconds": 450,
+      "alternative_tools": ["php-parser", "tree-sitter"]
+    },
+    
+    "ruby": {
+      "name": "Ruby",
+      "file_extension": ".rb",
+      "tool_name": "rubysrc2cpg.bat",
+      "command_template": "{tool_path} {memory_allocation} {input_file} --output {output_dir}",
+      "memory_allocation": "-J-Xmx6g",
+      "timeout_seconds": 450,
+      "alternative_tools": ["parser", "tree-sitter"]
+    },
+    
+    "swift": {
+      "name": "Swift",
+      "file_extension": ".swift",
+      "tool_name": "swiftsrc2cpg.bat",
+      "command_template": "{tool_path} {memory_allocation} {input_file} --output {output_dir}",
+      "memory_allocation": "-J-Xmx8g",
+      "timeout_seconds": 600,
+      "alternative_tools": ["swift-syntax"]
+    },
+    
+    "go": {
+      "name": "Go",
+      "file_extension": ".go",
+      "tool_name": "gosrc2cpg.bat",
+      "command_template": "{tool_path} {memory_allocation} {input_file} --output {output_dir}",
+      "memory_allocation": "-J-Xmx6g",
+      "timeout_seconds": 450,
+      "alternative_tools": ["go-ast", "tree-sitter"]
+    }
+  }
+}

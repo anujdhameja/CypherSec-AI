@@ -1,0 +1,183 @@
+{
+  "_description": "Comprehensive configuration with all available options and detailed documentation",
+  "_usage": "Complete reference configuration showing all possible settings and options",
+  "_version": "1.0.0",
+  "_last_updated": "2024-10-29",
+  
+  "system": {
+    "_comment": "System-wide configuration settings",
+    
+    "joern_path": "joern/joern-cli",
+    "_joern_path_description": "Path to Joern CLI installation directory (absolute or relative)",
+    
+    "output_base_dir": "verification_output",
+    "_output_base_dir_description": "Base directory for all verification outputs and reports",
+    
+    "temp_dir": "temp_test_files",
+    "_temp_dir_description": "Directory for temporary test files during verification",
+    
+    "max_concurrent_tests": 1,
+    "_max_concurrent_tests_description": "Maximum number of languages to test concurrently (1-8 recommended)",
+    
+    "cleanup_temp_files": true,
+    "_cleanup_temp_files_description": "Whether to clean up temporary files after verification",
+    
+    "verbose_logging": false,
+    "_verbose_logging_description": "Enable detailed logging output for debugging"
+  },
+  
+  "languages": {
+    "_comment": "Language-specific configuration for each supported programming language",
+    
+    "python": {
+      "name": "Python",
+      "_name_description": "Display name for the language in reports",
+      
+      "file_extension": ".py",
+      "_file_extension_description": "File extension for test files",
+      
+      "tool_name": "pysrc2cpg.bat",
+      "_tool_name_description": "Joern tool executable name for this language",
+      
+      "command_template": "{tool_path} {memory_allocation} {input_file} --output {output_dir}",
+      "_command_template_description": "Command template with placeholders for CPG generation",
+      
+      "memory_allocation": "-J-Xmx4g",
+      "_memory_allocation_description": "JVM memory allocation for CPG generation",
+      
+      "timeout_seconds": 300,
+      "_timeout_seconds_description": "Maximum execution time in seconds",
+      
+      "alternative_tools": ["tree-sitter", "ast", "libcst"],
+      "_alternative_tools_description": "List of alternative tools when Joern fails"
+    },
+    
+    "java": {
+      "name": "Java",
+      "file_extension": ".java",
+      "tool_name": "javasrc2cpg.bat",
+      "command_template": "{tool_path} {memory_allocation} {input_file} --output {output_dir}",
+      "memory_allocation": "-J-Xmx4g",
+      "timeout_seconds": 300,
+      "alternative_tools": ["eclipse-jdt", "spoon", "javaparser"]
+    },
+    
+    "c": {
+      "name": "C",
+      "file_extension": ".c",
+      "tool_name": "c2cpg.bat",
+      "command_template": "{tool_path} {memory_allocation} {input_file} --output {output_dir}",
+      "memory_allocation": "-J-Xmx4g",
+      "timeout_seconds": 300,
+      "alternative_tools": ["clang", "gcc", "tree-sitter"]
+    },
+    
+    "cpp": {
+      "name": "C++",
+      "file_extension": ".cpp",
+      "tool_name": "c2cpg.bat",
+      "command_template": "{tool_path} {memory_allocation} {input_file} --output {output_dir}",
+      "memory_allocation": "-J-Xmx4g",
+      "timeout_seconds": 300,
+      "alternative_tools": ["clang++", "g++", "tree-sitter"]
+    },
+    
+    "csharp": {
+      "name": "C#",
+      "file_extension": ".cs",
+      "tool_name": "csharpsrc2cpg.bat",
+      "command_template": "{tool_path} {memory_allocation} {input_file} --output {output_dir}",
+      "memory_allocation": "-J-Xmx4g",
+      "timeout_seconds": 300,
+      "alternative_tools": ["roslyn", "mono"]
+    },
+    
+    "javascript": {
+      "name": "JavaScript",
+      "file_extension": ".js",
+      "tool_name": "jssrc2cpg.bat",
+      "command_template": "{tool_path} {memory_allocation} {input_file} --output {output_dir}",
+      "memory_allocation": "-J-Xmx4g",
+      "timeout_seconds": 300,
+      "alternative_tools": ["babel", "acorn", "tree-sitter"]
+    },
+    
+    "kotlin": {
+      "name": "Kotlin",
+      "file_extension": ".kt",
+      "tool_name": "kotlin2cpg.bat",
+      "command_template": "{tool_path} {memory_allocation} {input_file} --output {output_dir}",
+      "memory_allocation": "-J-Xmx4g",
+      "timeout_seconds": 300,
+      "alternative_tools": ["kotlinc"]
+    },
+    
+    "php": {
+      "name": "PHP",
+      "file_extension": ".php",
+      "tool_name": "php2cpg.bat",
+      "command_template": "{tool_path} {memory_allocation} {input_file} --output {output_dir}",
+      "memory_allocation": "-J-Xmx4g",
+      "timeout_seconds": 300,
+      "alternative_tools": ["php-parser", "tree-sitter"]
+    },
+    
+    "ruby": {
+      "name": "Ruby",
+      "file_extension": ".rb",
+      "tool_name": "rubysrc2cpg.bat",
+      "command_template": "{tool_path} {memory_allocation} {input_file} --output {output_dir}",
+      "memory_allocation": "-J-Xmx4g",
+      "timeout_seconds": 300,
+      "alternative_tools": ["parser", "tree-sitter"]
+    },
+    
+    "swift": {
+      "name": "Swift",
+      "file_extension": ".swift",
+      "tool_name": "swiftsrc2cpg.bat",
+      "command_template": "{tool_path} {memory_allocation} {input_file} --output {output_dir}",
+      "memory_allocation": "-J-Xmx4g",
+      "timeout_seconds": 300,
+      "alternative_tools": ["swift-syntax"]
+    },
+    
+    "go": {
+      "name": "Go",
+      "file_extension": ".go",
+      "tool_name": "gosrc2cpg.bat",
+      "command_template": "{tool_path} {memory_allocation} {input_file} --output {output_dir}",
+      "memory_allocation": "-J-Xmx4g",
+      "timeout_seconds": 300,
+      "alternative_tools": ["go-ast", "tree-sitter"]
+    }
+  },
+  
+  "_configuration_notes": {
+    "memory_allocation_options": [
+      "-J-Xmx1g (1GB - minimal)",
+      "-J-Xmx2g (2GB - light)",
+      "-J-Xmx4g (4GB - standard)",
+      "-J-Xmx8g (8GB - heavy)",
+      "-J-Xmx16g (16GB - maximum)"
+    ],
+    
+    "timeout_recommendations": {
+      "development": "60-180 seconds",
+      "ci_cd": "120-300 seconds",
+      "production": "300-900 seconds"
+    },
+    
+    "concurrent_test_guidelines": {
+      "1": "Safe for all systems, sequential execution",
+      "2-4": "Good for multi-core systems with 8GB+ RAM",
+      "4-8": "High-performance systems with 16GB+ RAM only"
+    },
+    
+    "path_format_notes": {
+      "windows": "Use forward slashes or double backslashes: C:/joern/joern-cli or C:\\\\joern\\\\joern-cli",
+      "linux_macos": "Use standard Unix paths: /opt/joern/joern-cli or ~/joern/joern-cli",
+      "relative_paths": "Relative to the working directory where verification is run"
+    }
+  }
+}
