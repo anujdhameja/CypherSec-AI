@@ -1,0 +1,361 @@
+{
+  "languages": {
+    "C": {
+      "name": "C",
+      "file_extensions": [
+        ".c",
+        ".h"
+      ],
+      "support_level": "fully_supported",
+      "primary_tool": "c2cpg.bat",
+      "alternative_tools": [
+        "tree-sitter-c",
+        "clang-ast-dump"
+      ],
+      "command_template": "c2cpg.bat {memory_args} {input_path} --output {output_dir}",
+      "notes": null
+    },
+    "C++": {
+      "name": "C++",
+      "file_extensions": [
+        ".cpp",
+        ".cxx",
+        ".cc",
+        ".hpp",
+        ".hxx",
+        ".hh"
+      ],
+      "support_level": "not_supported",
+      "primary_tool": null,
+      "alternative_tools": [
+        "tree-sitter-cpp",
+        "clang-ast-dump"
+      ],
+      "command_template": "c2cpg.bat {memory_args} {input_path} --output {output_dir}",
+      "notes": null
+    },
+    "C#": {
+      "name": "C#",
+      "file_extensions": [
+        ".cs"
+      ],
+      "support_level": "fully_supported",
+      "primary_tool": "csharpsrc2cpg.bat",
+      "alternative_tools": [
+        "roslyn-analyzers",
+        "tree-sitter-c-sharp"
+      ],
+      "command_template": "csharpsrc2cpg.bat {memory_args} {input_path} --output {output_dir}",
+      "notes": null
+    },
+    "Java": {
+      "name": "Java",
+      "file_extensions": [
+        ".java"
+      ],
+      "support_level": "fully_supported",
+      "primary_tool": "javasrc2cpg.bat",
+      "alternative_tools": [
+        "tree-sitter-java",
+        "eclipse-jdt"
+      ],
+      "command_template": "javasrc2cpg.bat {memory_args} {input_path} --output {output_dir}",
+      "notes": null
+    },
+    "JavaScript": {
+      "name": "JavaScript",
+      "file_extensions": [
+        ".js",
+        ".mjs",
+        ".jsx"
+      ],
+      "support_level": "fully_supported",
+      "primary_tool": "jssrc2cpg.bat",
+      "alternative_tools": [
+        "tree-sitter-javascript",
+        "babel-parser",
+        "esprima"
+      ],
+      "command_template": "jssrc2cpg.bat {memory_args} {input_path} --output {output_dir}",
+      "notes": null
+    },
+    "Kotlin": {
+      "name": "Kotlin",
+      "file_extensions": [
+        ".kt",
+        ".kts"
+      ],
+      "support_level": "fully_supported",
+      "primary_tool": "kotlin2cpg.bat",
+      "alternative_tools": [
+        "tree-sitter-kotlin",
+        "kotlinc-ast"
+      ],
+      "command_template": "kotlin2cpg.bat {memory_args} {input_path} --output {output_dir}",
+      "notes": null
+    },
+    "PHP": {
+      "name": "PHP",
+      "file_extensions": [
+        ".php",
+        ".phtml",
+        ".php3",
+        ".php4",
+        ".php5"
+      ],
+      "support_level": "fully_supported",
+      "primary_tool": "php2cpg.bat",
+      "alternative_tools": [
+        "tree-sitter-php",
+        "php-parser"
+      ],
+      "command_template": "php2cpg.bat {memory_args} {input_path} --output {output_dir}",
+      "notes": null
+    },
+    "Python": {
+      "name": "Python",
+      "file_extensions": [
+        ".py",
+        ".pyw",
+        ".pyi"
+      ],
+      "support_level": "fully_supported",
+      "primary_tool": "pysrc2cpg.bat",
+      "alternative_tools": [
+        "tree-sitter-python",
+        "ast",
+        "libcst"
+      ],
+      "command_template": "pysrc2cpg.bat {memory_args} {input_path} --output {output_dir}",
+      "notes": null
+    },
+    "Ruby": {
+      "name": "Ruby",
+      "file_extensions": [
+        ".rb",
+        ".rbw"
+      ],
+      "support_level": "fully_supported",
+      "primary_tool": "rubysrc2cpg.bat",
+      "alternative_tools": [
+        "tree-sitter-ruby",
+        "ripper"
+      ],
+      "command_template": "rubysrc2cpg.bat {memory_args} {input_path} --output {output_dir}",
+      "notes": null
+    },
+    "Swift": {
+      "name": "Swift",
+      "file_extensions": [
+        ".swift"
+      ],
+      "support_level": "fully_supported",
+      "primary_tool": "swiftsrc2cpg.bat",
+      "alternative_tools": [
+        "tree-sitter-swift",
+        "swift-syntax"
+      ],
+      "command_template": "swiftsrc2cpg.bat {memory_args} {input_path} --output {output_dir}",
+      "notes": null
+    },
+    "Go": {
+      "name": "Go",
+      "file_extensions": [
+        ".go"
+      ],
+      "support_level": "fully_supported",
+      "primary_tool": "gosrc2cpg.bat",
+      "alternative_tools": [
+        "tree-sitter-go",
+        "go-ast"
+      ],
+      "command_template": "gosrc2cpg.bat {memory_args} {input_path} --output {output_dir}",
+      "notes": null
+    },
+    "Binary/Assembly": {
+      "name": "Binary/Assembly",
+      "file_extensions": [
+        ".exe",
+        ".dll",
+        ".so",
+        ".dylib"
+      ],
+      "support_level": "fully_supported",
+      "primary_tool": "ghidra2cpg.bat",
+      "alternative_tools": [
+        "radare2",
+        "ida-pro",
+        "binary-ninja"
+      ],
+      "command_template": "ghidra2cpg.bat {memory_args} {input_path} --output {output_dir}",
+      "notes": null
+    },
+    "Java Bytecode": {
+      "name": "Java Bytecode",
+      "file_extensions": [
+        ".class",
+        ".jar"
+      ],
+      "support_level": "fully_supported",
+      "primary_tool": "jimple2cpg.bat",
+      "alternative_tools": [
+        "soot",
+        "asm-bytecode"
+      ],
+      "command_template": "jimple2cpg.bat {memory_args} {input_path} --output {output_dir}",
+      "notes": null
+    }
+  },
+  "tool_mappings": {
+    "c2cpg.bat": {
+      "tool_name": "c2cpg.bat",
+      "tool_path": "joern\\joern-cli\\c2cpg.bat",
+      "supported_languages": [
+        "C"
+      ],
+      "command_template": "c2cpg.bat {memory_args} {input_path} --output {output_dir}",
+      "memory_args": "-J-Xmx4g",
+      "executable": true
+    },
+    "c2cpg.sh": {
+      "tool_name": "c2cpg.sh",
+      "tool_path": "joern\\joern-cli\\c2cpg.sh",
+      "supported_languages": [
+        "C"
+      ],
+      "command_template": "c2cpg.bat {memory_args} {input_path} --output {output_dir}",
+      "memory_args": "-J-Xmx4g",
+      "executable": false
+    },
+    "csharpsrc2cpg.bat": {
+      "tool_name": "csharpsrc2cpg.bat",
+      "tool_path": "joern\\joern-cli\\csharpsrc2cpg.bat",
+      "supported_languages": [
+        "C#"
+      ],
+      "command_template": "csharpsrc2cpg.bat {memory_args} {input_path} --output {output_dir}",
+      "memory_args": "-J-Xmx4g",
+      "executable": true
+    },
+    "ghidra2cpg.bat": {
+      "tool_name": "ghidra2cpg.bat",
+      "tool_path": "joern\\joern-cli\\ghidra2cpg.bat",
+      "supported_languages": [
+        "Binary/Assembly"
+      ],
+      "command_template": "ghidra2cpg.bat {memory_args} {input_path} --output {output_dir}",
+      "memory_args": "-J-Xmx4g",
+      "executable": true
+    },
+    "gosrc2cpg.bat": {
+      "tool_name": "gosrc2cpg.bat",
+      "tool_path": "joern\\joern-cli\\gosrc2cpg.bat",
+      "supported_languages": [
+        "Go"
+      ],
+      "command_template": "gosrc2cpg.bat {memory_args} {input_path} --output {output_dir}",
+      "memory_args": "-J-Xmx4g",
+      "executable": true
+    },
+    "javasrc2cpg.bat": {
+      "tool_name": "javasrc2cpg.bat",
+      "tool_path": "joern\\joern-cli\\javasrc2cpg.bat",
+      "supported_languages": [
+        "Java"
+      ],
+      "command_template": "javasrc2cpg.bat {memory_args} {input_path} --output {output_dir}",
+      "memory_args": "-J-Xmx4g",
+      "executable": true
+    },
+    "jimple2cpg.bat": {
+      "tool_name": "jimple2cpg.bat",
+      "tool_path": "joern\\joern-cli\\jimple2cpg.bat",
+      "supported_languages": [
+        "Java Bytecode"
+      ],
+      "command_template": "jimple2cpg.bat {memory_args} {input_path} --output {output_dir}",
+      "memory_args": "-J-Xmx4g",
+      "executable": true
+    },
+    "jssrc2cpg.bat": {
+      "tool_name": "jssrc2cpg.bat",
+      "tool_path": "joern\\joern-cli\\jssrc2cpg.bat",
+      "supported_languages": [
+        "JavaScript"
+      ],
+      "command_template": "jssrc2cpg.bat {memory_args} {input_path} --output {output_dir}",
+      "memory_args": "-J-Xmx4g",
+      "executable": true
+    },
+    "jssrc2cpg.sh": {
+      "tool_name": "jssrc2cpg.sh",
+      "tool_path": "joern\\joern-cli\\jssrc2cpg.sh",
+      "supported_languages": [
+        "JavaScript"
+      ],
+      "command_template": "jssrc2cpg.bat {memory_args} {input_path} --output {output_dir}",
+      "memory_args": "-J-Xmx4g",
+      "executable": false
+    },
+    "kotlin2cpg.bat": {
+      "tool_name": "kotlin2cpg.bat",
+      "tool_path": "joern\\joern-cli\\kotlin2cpg.bat",
+      "supported_languages": [
+        "Kotlin"
+      ],
+      "command_template": "kotlin2cpg.bat {memory_args} {input_path} --output {output_dir}",
+      "memory_args": "-J-Xmx4g",
+      "executable": true
+    },
+    "php2cpg.bat": {
+      "tool_name": "php2cpg.bat",
+      "tool_path": "joern\\joern-cli\\php2cpg.bat",
+      "supported_languages": [
+        "PHP"
+      ],
+      "command_template": "php2cpg.bat {memory_args} {input_path} --output {output_dir}",
+      "memory_args": "-J-Xmx4g",
+      "executable": true
+    },
+    "pysrc2cpg.bat": {
+      "tool_name": "pysrc2cpg.bat",
+      "tool_path": "joern\\joern-cli\\pysrc2cpg.bat",
+      "supported_languages": [
+        "Python"
+      ],
+      "command_template": "pysrc2cpg.bat {memory_args} {input_path} --output {output_dir}",
+      "memory_args": "-J-Xmx4g",
+      "executable": true
+    },
+    "rubysrc2cpg.bat": {
+      "tool_name": "rubysrc2cpg.bat",
+      "tool_path": "joern\\joern-cli\\rubysrc2cpg.bat",
+      "supported_languages": [
+        "Ruby"
+      ],
+      "command_template": "rubysrc2cpg.bat {memory_args} {input_path} --output {output_dir}",
+      "memory_args": "-J-Xmx4g",
+      "executable": true
+    },
+    "swiftsrc2cpg.bat": {
+      "tool_name": "swiftsrc2cpg.bat",
+      "tool_path": "joern\\joern-cli\\swiftsrc2cpg.bat",
+      "supported_languages": [
+        "Swift"
+      ],
+      "command_template": "swiftsrc2cpg.bat {memory_args} {input_path} --output {output_dir}",
+      "memory_args": "-J-Xmx4g",
+      "executable": true
+    },
+    "swiftsrc2cpg.sh": {
+      "tool_name": "swiftsrc2cpg.sh",
+      "tool_path": "joern\\joern-cli\\swiftsrc2cpg.sh",
+      "supported_languages": [
+        "Swift"
+      ],
+      "command_template": "swiftsrc2cpg.bat {memory_args} {input_path} --output {output_dir}",
+      "memory_args": "-J-Xmx4g",
+      "executable": false
+    }
+  }
+}
