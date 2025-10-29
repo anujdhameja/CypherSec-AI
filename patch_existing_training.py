@@ -297,7 +297,7 @@ def main():
     """Main execution"""
     
     print("="*60)
-    print("CypherSec-AI Training Code Patcher")
+    print("devign Training Code Patcher")
     print("="*60)
     print("\nThis will patch your training code with critical fixes:")
     print("  1. Gradient clipping")

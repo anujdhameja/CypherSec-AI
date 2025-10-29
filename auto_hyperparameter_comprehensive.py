@@ -1,5 +1,5 @@
 # """
-# Comprehensive Auto-Hyperparameter Tuning for CypherSec-AI
+# Comprehensive Auto-Hyperparameter Tuning for devign
 # Fixes all issues and systematically tests configurations
 
 # CRITICAL FIXES IMPLEMENTED:
@@ -723,7 +723,7 @@
 # def main():
 #     """Main execution"""
 #     print("\n" + "="*80)
-#     print("CypherSec-AI - Comprehensive Hyperparameter Search")
+#     print("devign - Comprehensive Hyperparameter Search")
 #     print("="*80)
 #     print("\nThis will:")
 #     print("  1. Test multiple configurations systematically")
@@ -754,7 +754,7 @@
 
 
 """
-Comprehensive Auto-Hyperparameter Tuning for CypherSec-AI
+Comprehensive Auto-Hyperparameter Tuning for devign
 Fixes all issues and systematically tests configurations
 
 CRITICAL FIXES IMPLEMENTED:
@@ -1493,7 +1493,7 @@ class ComprehensiveHyperparameterSearch:
 def main():
     """Main execution"""
     print("\n" + "="*80)
-    print("CypherSec-AI - Comprehensive Hyperparameter Search")
+    print("devign - Comprehensive Hyperparameter Search")
     print("="*80)
     print("\nThis will:")
     print("  1. Test multiple configurations systematically")
