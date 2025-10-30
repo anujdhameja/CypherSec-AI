@@ -151,8 +151,8 @@ class Process(Config):
 
 
 class Devign:
-    learning_rate = 1e-4
-    weight_decay = 1.3e-6
+    learning_rate = 1e-3  # FIXED: 10x higher (Config 9 value)
+    weight_decay = 1e-4   # FIXED: 100x higher (Config 9 value)
     loss_lambda = 1.3e-6
     
     model = {

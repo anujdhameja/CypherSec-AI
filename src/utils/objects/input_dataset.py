@@ -6,26 +6,32 @@ from torch_geometric.data import Data, Batch
 from torch_geometric.loader import DataLoader
 
 class InputDataset(TorchDataset):
-    def __init__(self, data_dir, max_files=None):
+    def __init__(self, data_source, max_files=None):
         """
         Args:
-            data_dir (str): Directory containing .pkl files with data
+            data_source (str or pd.DataFrame): Directory containing .pkl files OR DataFrame with data
             max_files (int, optional): Maximum number of files to load (for testing)
         """
-        self.data_dir = data_dir
-        self.file_list = sorted([f for f in os.listdir(data_dir) if f.endswith('.pkl')])
-        
-        # Limit number of files if specified (for testing)
-        if max_files is not None:
-            self.file_list = self.file_list[:max_files]
-        
         self.data = []
         self.targets = []
         
-        # Load data from files
-        self._load_data()
+        # Handle both directory path and DataFrame inputs
+        if isinstance(data_source, str):
+            # Directory path - load from files
+            self.data_dir = data_source
+            self.file_list = sorted([f for f in os.listdir(data_source) if f.endswith('.pkl')])
+            
+            # Limit number of files if specified (for testing)
+            if max_files is not None:
+                self.file_list = self.file_list[:max_files]
+            
+            # Load data from files
+            self._load_data_from_files()
+        else:
+            # DataFrame - load directly
+            self._load_data_from_dataframe(data_source)
     
-    def _load_data(self):
+    def _load_data_from_files(self):
         """Load data from all files into memory."""
         total_samples = 0
         
@@ -46,6 +52,20 @@ class InputDataset(TorchDataset):
                 continue
         
         print(f"Loaded {len(self.data)} samples from {len(self.file_list)} files")
+        
+        # Verify data consistency
+        if len(self.data) != len(self.targets):
+            raise ValueError(f"Mismatch between number of samples ({len(self.data)}) and targets ({len(self.targets)})")
+    
+    def _load_data_from_dataframe(self, df):
+        """Load data directly from DataFrame."""
+        if df.empty or 'input' not in df.columns or 'target' not in df.columns:
+            raise ValueError("DataFrame must have 'input' and 'target' columns")
+        
+        self.data = df['input'].tolist()
+        self.targets = df['target'].tolist()
+        
+        print(f"Loaded {len(self.data)} samples from DataFrame")
         
         # Verify data consistency
         if len(self.data) != len(self.targets):

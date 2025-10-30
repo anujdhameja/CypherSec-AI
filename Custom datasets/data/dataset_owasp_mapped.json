@@ -1,0 +1,46 @@
+[
+  {
+    "id": "owasp_xss_001",
+    "source": "owasp",
+    "file": "webgoat/xss/reflected_xss.c",
+    "function": "display_search_results",
+    "code": "void display_search_results(char *search_term) {\n    printf(\"<html><body>\");\n    printf(\"<h1>Search Results for: %s</h1>\", search_term);  // CWE-79: XSS\n    printf(\"</body></html>\");\n}",
+    "is_vulnerable": true,
+    "cwe_id": "CWE-79",
+    "cve_ids": [],
+    "severity": "MEDIUM"
+  },
+  {
+    "id": "owasp_csrf_001",
+    "source": "owasp",
+    "file": "webgoat/csrf/transfer_funds.c",
+    "function": "transfer_money",
+    "code": "void transfer_money(char *to_account, int amount) {\n    // CWE-352: No CSRF protection\n    if (is_logged_in()) {\n        execute_transfer(to_account, amount);\n        printf(\"Transfer completed\\n\");\n    }\n}",
+    "is_vulnerable": true,
+    "cwe_id": "CWE-352",
+    "cve_ids": [],
+    "severity": "HIGH"
+  },
+  {
+    "id": "owasp_auth_001",
+    "source": "owasp",
+    "file": "webgoat/auth/weak_session.c",
+    "function": "create_session",
+    "code": "char* create_session(char *username) {\n    char *session_id = malloc(32);\n    // CWE-330: Weak random number generation\n    sprintf(session_id, \"%s_%d\", username, rand());\n    return session_id;\n}",
+    "is_vulnerable": true,
+    "cwe_id": "CWE-330",
+    "cve_ids": [],
+    "severity": "MEDIUM"
+  },
+  {
+    "id": "owasp_crypto_001",
+    "source": "owasp",
+    "file": "webgoat/crypto/weak_encryption.c",
+    "function": "encrypt_password",
+    "code": "char* encrypt_password(char *password) {\n    // CWE-327: Use of broken cryptographic algorithm\n    char *encrypted = malloc(strlen(password) + 1);\n    \n    // Simple XOR \"encryption\" - very weak\n    for (int i = 0; password[i]; i++) {\n        encrypted[i] = password[i] ^ 0x42;\n    }\n    encrypted[strlen(password)] = '\\0';\n    \n    return encrypted;\n}",
+    "is_vulnerable": true,
+    "cwe_id": "CWE-327",
+    "cve_ids": [],
+    "severity": "HIGH"
+  }
+]

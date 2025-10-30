@@ -1,18 +1,18 @@
 {
   "devign": {
     "learning_rate": 0.0001,
-    "weight_decay": 1.3e-06,
-    "loss_lambda": 1.3e-06,
+    "weight_decay": 1e-06,
+    "loss_lambda": 1e-06,
     "model": {
       "gated_graph_conv_args": {
-        "out_channels": 200,
-        "num_layers": 4,
+        "out_channels": 256,
+        "num_layers": 5,
         "aggr": "add",
         "bias": true
       },
       "conv_args": {
         "conv1d_1": {
-          "in_channels": 205,
+          "in_channels": 100,
           "out_channels": 50,
           "kernel_size": 3,
           "padding": 1
@@ -47,7 +47,7 @@
     "joern": "data/joern/",
     "raw": "data/raw/",
     "input": "data/input/",
-    "model": "data/model/",
+    "model": "models/",
     "tokens": "data/tokens/",
     "w2v": "data/w2v/"
   },
@@ -57,7 +57,7 @@
     "tokens": "tokens.pkl",
     "w2v": "w2v.model",
     "input": "input.pkl",
-    "model": "checkpoint.pt"
+    "model": "final_model.pth"
   },
   "embed": {
     "nodes_dim": 205,
@@ -75,11 +75,11 @@
     "edge_type": "Ast"
   },
   "process": {
-    "epochs": 50,
-    "patience": 10,
-    "batch_size": 8,
+    "epochs": 100,
+    "patience": 15,
+    "batch_size": 32,
     "dataset_ratio": 1.0,
-    "shuffle": false,
+    "shuffle": true,
     "gradient_clip": 1.0
   }
 }

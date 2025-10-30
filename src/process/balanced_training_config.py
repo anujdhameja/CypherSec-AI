@@ -19,8 +19,8 @@ class BalancedDevignModel(nn.Module):
     3. THIS: dropout=0.4, weight_decay=1e-5 → BALANCED (hopefully!)
     """
     
-    def __init__(self, input_dim=205, output_dim=2, hidden_dim=200, 
-                 num_steps=4, dropout=0.4):
+    def __init__(self, input_dim=100, output_dim=2, hidden_dim=256, 
+                 num_steps=5, dropout=0.2):
         super().__init__()
         
         print(f"\n=== BALANCED Devign Model ===")
@@ -59,11 +59,10 @@ class BalancedDevignModel(nn.Module):
         x = F.relu(x)
         x = self.dropout(x)
         
-        # GNN with residual
-        x_skip = x
+        # GNN (simple - no residual like Config 9)
         x = self.ggc(x, edge_index)
         x = self.gnn_bn(x)
-        x = F.relu(x + x_skip)  # Residual
+        x = F.relu(x)  # No residual connection
         x = self.dropout(x)
         
         # Dual pooling
@@ -87,8 +86,11 @@ class BalancedDevignModel(nn.Module):
         return x
     
     def save(self, path):
+        import os
+        os.makedirs(os.path.dirname(path), exist_ok=True)
         torch.save(self.state_dict(), path)
-        print(f"✓ Model saved to {path}")
+        print(f"💾 Model saved to: {os.path.abspath(path)}")
+        print(f"📍 Model location: {os.path.abspath(path)}")
     
     def load(self, path):
         self.load_state_dict(torch.load(path))

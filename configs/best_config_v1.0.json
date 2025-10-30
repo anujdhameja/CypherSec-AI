@@ -1,0 +1,30 @@
+{
+  "architecture": {
+    "input_dim": 100,
+    "output_dim": 2,
+    "hidden_dim": 384,
+    "num_steps": 4,
+    "dropout": 0.2,
+    "pooling": "mean_max"
+  },
+  "training": {
+    "learning_rate": 1e-5,
+    "weight_decay": 1e-5,
+    "batch_size": 32,
+    "epochs": 100,
+    "patience": 10,
+    "gradient_clip": 1.0
+  },
+  "performance": {
+    "test_accuracy": 0.8357,
+    "validation_accuracy": 0.8375,
+    "train_accuracy": 0.9344,
+    "baseline_rf": 0.8177
+  },
+  "optimization_results": {
+    "rank": 1,
+    "config_name": "Config 9",
+    "description": "Best performing configuration with mean_max pooling",
+    "improvement_over_baseline": 0.018
+  }
+}

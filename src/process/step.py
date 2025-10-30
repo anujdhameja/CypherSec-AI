@@ -37,12 +37,14 @@ class Step:
             # Backward pass
             loss.backward()
             
-            # CRITICAL: Gradient clipping for stability
-            grad_norm = torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
+            # REMOVED: Gradient clipping (Config 9 doesn't use it)
+            # grad_norm = torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
             
-            # Check for exploding gradients
-            if grad_norm > 10.0:
-                print(f"⚠️ Large gradient norm: {grad_norm:.2f} at batch {i}")
+            # Check for exploding gradients (monitoring only)
+            with torch.no_grad():
+                grad_norm = torch.nn.utils.clip_grad_norm_(self.model.parameters(), float('inf'))
+                if grad_norm > 10.0:
+                    print(f"⚠️ Large gradient norm: {grad_norm:.2f} at batch {i}")
             
             # Parameter update
             self.optimizer.step()

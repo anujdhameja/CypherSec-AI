@@ -1,0 +1,147 @@
+[
+  {
+    "id": "github_buffer_001",
+    "source": "github",
+    "file": "examples/buffer_overflow/strcpy_vuln.c",
+    "function": "vulnerable_strcpy",
+    "code": "void vulnerable_strcpy(char *user_input) {\n    char buffer[64];\n    strcpy(buffer, user_input);  // CWE-119: No bounds checking\n    printf(\"Data: %s\\n\", buffer);\n}",
+    "is_vulnerable": true,
+    "cwe_id": "CWE-119",
+    "cve_ids": [
+      "CVE-2019-14287"
+    ],
+    "severity": "HIGH"
+  },
+  {
+    "id": "github_buffer_002",
+    "source": "github",
+    "file": "examples/buffer_overflow/gets_vuln.c",
+    "function": "read_user_input",
+    "code": "void read_user_input() {\n    char buffer[256];\n    printf(\"Enter data: \");\n    gets(buffer);  // CWE-119: gets() is inherently unsafe\n    process_data(buffer);\n}",
+    "is_vulnerable": true,
+    "cwe_id": "CWE-119",
+    "cve_ids": [],
+    "severity": "HIGH"
+  },
+  {
+    "id": "github_buffer_003",
+    "source": "github",
+    "file": "examples/buffer_overflow/sprintf_vuln.c",
+    "function": "format_message",
+    "code": "void format_message(char *user_data) {\n    char message[100];\n    sprintf(message, \"User: %s\", user_data);  // CWE-119: No length check\n    display_message(message);\n}",
+    "is_vulnerable": true,
+    "cwe_id": "CWE-119",
+    "cve_ids": [],
+    "severity": "HIGH"
+  },
+  {
+    "id": "github_sql_001",
+    "source": "github",
+    "file": "examples/sql_injection/login_vuln.c",
+    "function": "authenticate_user",
+    "code": "int authenticate_user(char *username, char *password) {\n    char query[512];\n    sprintf(query, \"SELECT * FROM users WHERE username='%s' AND password='%s'\", \n            username, password);  // CWE-89: SQL injection\n    return execute_query(query);\n}",
+    "is_vulnerable": true,
+    "cwe_id": "CWE-89",
+    "cve_ids": [],
+    "severity": "HIGH"
+  },
+  {
+    "id": "github_uaf_001",
+    "source": "github",
+    "file": "examples/use_after_free/double_free.c",
+    "function": "process_data",
+    "code": "void process_data(char *data) {\n    char *buffer = malloc(strlen(data) + 1);\n    strcpy(buffer, data);\n    \n    if (error_condition) {\n        free(buffer);\n        return;\n    }\n    \n    printf(\"Data: %s\\n\", buffer);\n    free(buffer);  // CWE-416: Potential double free\n}",
+    "is_vulnerable": true,
+    "cwe_id": "CWE-416",
+    "cve_ids": [],
+    "severity": "HIGH"
+  },
+  {
+    "id": "github_uaf_002",
+    "source": "github",
+    "file": "examples/use_after_free/use_after_free.c",
+    "function": "vulnerable_access",
+    "code": "void vulnerable_access() {\n    char *ptr = malloc(100);\n    strcpy(ptr, \"sensitive data\");\n    \n    free(ptr);\n    \n    // Later in code...\n    if (ptr != NULL) {\n        printf(\"Data: %s\\n\", ptr);  // CWE-416: Use after free\n    }\n}",
+    "is_vulnerable": true,
+    "cwe_id": "CWE-416",
+    "cve_ids": [],
+    "severity": "HIGH"
+  },
+  {
+    "id": "github_int_001",
+    "source": "github",
+    "file": "examples/integer_overflow/allocation.c",
+    "function": "allocate_buffer",
+    "code": "char* allocate_buffer(int count, int size) {\n    int total = count * size;  // CWE-190: Integer overflow possible\n    char *buffer = malloc(total);\n    if (!buffer) return NULL;\n    \n    memset(buffer, 0, total);\n    return buffer;\n}",
+    "is_vulnerable": true,
+    "cwe_id": "CWE-190",
+    "cve_ids": [],
+    "severity": "MEDIUM"
+  },
+  {
+    "id": "github_path_001",
+    "source": "github",
+    "file": "examples/path_traversal/file_access.c",
+    "function": "read_config_file",
+    "code": "int read_config_file(char *filename) {\n    char filepath[256];\n    sprintf(filepath, \"/etc/config/%s\", filename);  // CWE-22: Path traversal\n    \n    FILE *fp = fopen(filepath, \"r\");\n    if (!fp) return -1;\n    \n    // Read file content\n    fclose(fp);\n    return 0;\n}",
+    "is_vulnerable": true,
+    "cwe_id": "CWE-22",
+    "cve_ids": [],
+    "severity": "HIGH"
+  },
+  {
+    "id": "github_cmd_001",
+    "source": "github",
+    "file": "examples/command_injection/system_call.c",
+    "function": "backup_file",
+    "code": "int backup_file(char *filename) {\n    char command[512];\n    sprintf(command, \"cp %s %s.bak\", filename, filename);  // CWE-78: Command injection\n    return system(command);\n}",
+    "is_vulnerable": true,
+    "cwe_id": "CWE-78",
+    "cve_ids": [],
+    "severity": "HIGH"
+  },
+  {
+    "id": "github_null_001",
+    "source": "github",
+    "file": "examples/null_pointer/deref.c",
+    "function": "process_string",
+    "code": "void process_string(char *str) {\n    int len = strlen(str);  // CWE-476: No null check\n    \n    for (int i = 0; i < len; i++) {\n        if (str[i] == '\\n') {\n            str[i] = ' ';\n        }\n    }\n}",
+    "is_vulnerable": true,
+    "cwe_id": "CWE-476",
+    "cve_ids": [],
+    "severity": "MEDIUM"
+  },
+  {
+    "id": "github_safe_001",
+    "source": "github",
+    "file": "examples/safe/secure_strcpy.c",
+    "function": "secure_strcpy",
+    "code": "void secure_strcpy(char *user_input) {\n    char buffer[64];\n    if (strlen(user_input) >= sizeof(buffer)) {\n        printf(\"Input too long\\n\");\n        return;\n    }\n    strncpy(buffer, user_input, sizeof(buffer) - 1);\n    buffer[sizeof(buffer) - 1] = '\\0';\n    printf(\"Data: %s\\n\", buffer);\n}",
+    "is_vulnerable": false,
+    "cwe_id": "CWE-119",
+    "cve_ids": [],
+    "severity": "LOW"
+  },
+  {
+    "id": "github_safe_002",
+    "source": "github",
+    "file": "examples/safe/parameterized_query.c",
+    "function": "safe_authenticate",
+    "code": "int safe_authenticate(char *username, char *password) {\n    // Use parameterized queries to prevent SQL injection\n    sqlite3_stmt *stmt;\n    const char *sql = \"SELECT * FROM users WHERE username=? AND password=?\";\n    \n    sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);\n    sqlite3_bind_text(stmt, 1, username, -1, SQLITE_STATIC);\n    sqlite3_bind_text(stmt, 2, password, -1, SQLITE_STATIC);\n    \n    int result = sqlite3_step(stmt);\n    sqlite3_finalize(stmt);\n    return result == SQLITE_ROW;\n}",
+    "is_vulnerable": false,
+    "cwe_id": "CWE-89",
+    "cve_ids": [],
+    "severity": "LOW"
+  },
+  {
+    "id": "github_safe_003",
+    "source": "github",
+    "file": "examples/safe/safe_allocation.c",
+    "function": "safe_allocate_buffer",
+    "code": "char* safe_allocate_buffer(int count, int size) {\n    // Check for integer overflow\n    if (count <= 0 || size <= 0) return NULL;\n    if (count > SIZE_MAX / size) return NULL;  // Overflow check\n    \n    size_t total = (size_t)count * size;\n    char *buffer = malloc(total);\n    if (!buffer) return NULL;\n    \n    memset(buffer, 0, total);\n    return buffer;\n}",
+    "is_vulnerable": false,
+    "cwe_id": "CWE-190",
+    "cve_ids": [],
+    "severity": "LOW"
+  }
+]

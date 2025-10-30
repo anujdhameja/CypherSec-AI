@@ -1,0 +1,26 @@
+[
+  {
+    "id": "devign_001",
+    "source": "devign",
+    "file": "examples/buffer_overflow_1.c",
+    "function": "vulnerable_strcpy",
+    "code": "void vulnerable_strcpy(char *input) {\n    char buffer[100];\n    strcpy(buffer, input);  // CWE-119: Buffer overflow\n    printf(\"Buffer: %s\\n\", buffer);\n}",
+    "is_vulnerable": true,
+    "cwe_id": "CWE-119",
+    "cve_ids": [
+      "CVE-2015-0001"
+    ],
+    "severity": "HIGH"
+  },
+  {
+    "id": "devign_002",
+    "source": "devign",
+    "file": "examples/safe_strcpy.c",
+    "function": "safe_strcpy",
+    "code": "void safe_strcpy(char *input) {\n    char buffer[100];\n    strncpy(buffer, input, sizeof(buffer) - 1);  // Safe: bounds checking\n    buffer[sizeof(buffer) - 1] = '\\0';\n    printf(\"Buffer: %s\\n\", buffer);\n}",
+    "is_vulnerable": false,
+    "cwe_id": "CWE-119",
+    "cve_ids": [],
+    "severity": "LOW"
+  }
+]

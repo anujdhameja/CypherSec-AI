@@ -115,21 +115,14 @@ class Devign(Step):
         
         log.log_info('devign', f"🔧 FIXED CONFIG - LR: {self.lr}; WD: {self.wd};")
         
-        # Create model with REDUCED regularization
-        # _model = BalancedDevignModel(
-        #     input_dim=model['conv_args']['conv1d_1']['in_channels'],
-        #     output_dim=2,
-        #     hidden_dim=model['gated_graph_conv_args']['out_channels'],
-        #     num_steps=4,
-        #     dropout=0.2  # REDUCED from 0.4 (diagnostic recommendation)
-        # )
+        # Create model with OPTIMIZED configuration (Config 9)
         _model = BalancedDevignModel(
-            input_dim=100,  # CHANGED from model['conv_args']['conv1d_1']['in_channels']
+            input_dim=100,  # Optimized input dimension
             output_dim=2,
-            hidden_dim=200,
-            num_steps=4,
-            dropout=0.2
-            )
+            hidden_dim=256,  # Optimized from 200 to 256
+            num_steps=5,     # Optimized from 4 to 5
+            dropout=0.2      # Optimized dropout rate
+        )
         _model = _model.to(device)
         
         # CRITICAL FIX: Use standard CrossEntropyLoss (no label smoothing)
@@ -137,14 +130,14 @@ class Devign(Step):
         
         log.log_info('devign', "✓ Using standard CrossEntropyLoss (removed label smoothing)")
         
-        # Create optimizer with REDUCED weight decay
-        optimizer = optim.Adam(  # Use Adam (not AdamW)
+        # Create optimizer with Config 9 parameters
+        optimizer = optim.Adam(  # Use Adam (same as Config 9)
             _model.parameters(),
             lr=self.lr,
-            weight_decay=1e-6  # REDUCED from 1e-5 (diagnostic recommendation)
+            weight_decay=self.wd  # Use Config 9 weight decay (1e-4)
         )
         
-        log.log_info('devign', f"✓ Reduced regularization: dropout=0.2, wd=1e-6")
+        log.log_info('devign', f"✓ Config 9 parameters: dropout=0.2, lr={self.lr}, wd={self.wd}")
         
         # Add learning rate scheduler
         self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
@@ -159,6 +152,21 @@ class Devign(Step):
             loss_function=loss_fn,  # Just pass the loss function directly
             optimizer=optimizer
         )
+
+        # Try to load our optimized pre-trained model
+        import os
+        production_model_path = "models/production_model_config9_v1.0.pth"
+        if os.path.exists(production_model_path):
+            try:
+                log.log_info('devign', f"🚀 Loading optimized pre-trained model from {production_model_path}")
+                _model.load_state_dict(torch.load(production_model_path, map_location=device))
+                log.log_info('devign', "✅ Successfully loaded optimized model weights!")
+            except Exception as e:
+                log.log_info('devign', f"⚠️ Could not load pre-trained model: {e}")
+                log.log_info('devign', "Starting with random initialization")
+        else:
+            log.log_info('devign', f"ℹ️ No pre-trained model found at {production_model_path}")
+            log.log_info('devign', "Starting with random initialization")
 
         self.count_parameters()
 

@@ -49,6 +49,6 @@ class EarlyStopping:
             Saves model when validation loss decrease.
         """
         if self.verbose:
-            print(f'Validation loss decreased ({self.val_loss_min:.6f} --> {val_loss:.6f}).  Saving model ...')
+            print(f'✅ Validation loss decreased ({self.val_loss_min:.6f} --> {val_loss:.6f}).  Saving model ...')
         self.model.save()
         self.val_loss_min = val_loss

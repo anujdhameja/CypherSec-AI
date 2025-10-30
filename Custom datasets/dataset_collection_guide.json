@@ -1,0 +1,96 @@
+{
+  "dataset_collection_guide": {
+    "overview": "Comprehensive vulnerability dataset collection for machine learning training",
+    "target_location": "C:/Devign/devign/Custom datasets/data/",
+    "estimated_time": "3-4 hours (including downloads)",
+    "datasets": {
+      "devign": {
+        "name": "Devign Dataset",
+        "status": "Already available",
+        "description": "Graph-based vulnerability detection dataset",
+        "source": "Local repository",
+        "entries_expected": "27,000+",
+        "action": "Map existing data to standard format"
+      },
+      "juliet": {
+        "name": "NIST Juliet Test Suite",
+        "status": "Manual download required",
+        "description": "Comprehensive test cases for static analysis tools",
+        "source": "https://samate.nist.gov/SARD/",
+        "direct_url": "https://samate.nist.gov/SARD/downloads/test-suites/juliet-test-suite-v1.3-for-c-cpp.zip",
+        "entries_expected": "64,000+",
+        "file_size": "~500MB",
+        "manual_steps": [
+          "1. Visit https://samate.nist.gov/SARD/",
+          "2. Navigate to Test Suites section",
+          "3. Download 'Juliet Test Suite v1.3 for C/C++'",
+          "4. Save to: C:/Devign/devign/Custom datasets/data/juliet_raw/",
+          "5. Run processing script"
+        ],
+        "action": "Download, extract, and process C/C++ test cases"
+      },
+      "github_vuln": {
+        "name": "GitHub Vulnerability Examples",
+        "status": "Automated collection",
+        "description": "Real-world vulnerability patterns from GitHub",
+        "source": "GitHub repositories and security advisories",
+        "entries_expected": "100+",
+        "action": "Collect using GitHub API and manual curation"
+      },
+      "owasp": {
+        "name": "OWASP Vulnerability Examples",
+        "status": "Automated collection",
+        "description": "OWASP Top 10 and WebGoat examples",
+        "source": "OWASP projects and documentation",
+        "entries_expected": "50+",
+        "action": "Extract from OWASP resources"
+      },
+      "additional_sources": {
+        "cve_database": {
+          "name": "CVE Database Examples",
+          "source": "https://cve.mitre.org/",
+          "description": "Real CVE examples with code snippets"
+        },
+        "exploit_db": {
+          "name": "Exploit Database",
+          "source": "https://www.exploit-db.com/",
+          "description": "Proof-of-concept exploits"
+        },
+        "security_advisories": {
+          "name": "Security Advisories",
+          "source": "Various vendors",
+          "description": "Vendor security advisories with code examples"
+        }
+      }
+    },
+    "mapping_format": {
+      "description": "Standard format for all datasets",
+      "required_fields": {
+        "id": "Unique identifier (string)",
+        "source": "Dataset source name (string)",
+        "file": "Original file path (string)",
+        "function": "Function name containing the code (string)",
+        "code": "Source code snippet (string, max 2000 chars)",
+        "is_vulnerable": "Vulnerability flag (boolean)",
+        "cwe_id": "CWE identifier (string, e.g., 'CWE-119')",
+        "cve_ids": "List of related CVE IDs (array of strings)",
+        "severity": "Severity level (string: HIGH/MEDIUM/LOW)"
+      },
+      "optional_fields": {
+        "description": "Human-readable description",
+        "language": "Programming language",
+        "category": "Vulnerability category",
+        "fix_suggestion": "How to fix the vulnerability"
+      }
+    },
+    "processing_steps": [
+      "1. Download/collect raw datasets",
+      "2. Extract and parse source files",
+      "3. Map to standard format",
+      "4. Remove duplicates",
+      "5. Validate data quality",
+      "6. Generate statistics",
+      "7. Create combined dataset"
+    ]
+  }
+}

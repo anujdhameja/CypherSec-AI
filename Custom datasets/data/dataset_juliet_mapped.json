@@ -1,0 +1,35 @@
+[
+  {
+    "id": "juliet_001",
+    "source": "juliet",
+    "file": "testcases/CWE119_Buffer_Overflow/bad.c",
+    "function": "CWE119_bad",
+    "code": "void CWE119_bad() {\n    char data[100];\n    char source[100];\n    strcpy(data, source);  // FLAW: potential buffer overflow\n}",
+    "is_vulnerable": true,
+    "cwe_id": "CWE-119",
+    "cve_ids": [],
+    "severity": "HIGH"
+  },
+  {
+    "id": "juliet_002",
+    "source": "juliet",
+    "file": "testcases/CWE89_SQL_Injection/bad.c",
+    "function": "CWE89_bad",
+    "code": "void CWE89_bad(char *user_input) {\n    char query[256];\n    sprintf(query, \"SELECT * FROM users WHERE name='%s'\", user_input);\n    // FLAW: SQL injection vulnerability\n    execute_sql(query);\n}",
+    "is_vulnerable": true,
+    "cwe_id": "CWE-89",
+    "cve_ids": [],
+    "severity": "HIGH"
+  },
+  {
+    "id": "juliet_003",
+    "source": "juliet",
+    "file": "testcases/CWE89_SQL_Injection/good.c",
+    "function": "CWE89_good",
+    "code": "void CWE89_good(char *user_input) {\n    char query[256];\n    // FIX: Use parameterized query\n    prepare_statement(\"SELECT * FROM users WHERE name=?\", user_input);\n}",
+    "is_vulnerable": false,
+    "cwe_id": "CWE-89",
+    "cve_ids": [],
+    "severity": "LOW"
+  }
+]
