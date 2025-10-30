@@ -1,0 +1,88 @@
+{
+  "test_timestamp": "2025-10-30T21:52:36.308211",
+  "total_duration": 16.81032657623291,
+  "results": {
+    "pipeline": {
+      "status": "success",
+      "languages_tested": [
+        "c",
+        "cpp",
+        "python",
+        "java"
+      ],
+      "duration": 16.775518894195557
+    },
+    "validation": {
+      "data/replica_cpg": {
+        "exists": true,
+        "file_count": 2,
+        "files": [
+          "replica_0_replica_cpg.bin",
+          "replica_0_replica_cpg.pkl"
+        ]
+      },
+      "data/replica_input": {
+        "exists": true,
+        "file_count": 1,
+        "files": [
+          "replica_0_replica_cpg_replica_input.pkl"
+        ]
+      },
+      "data/replica_tokens": {
+        "exists": true,
+        "file_count": 1,
+        "files": [
+          "replica_0_replica_cpg_replica_tokens.pkl"
+        ]
+      },
+      "data/replica_w2v": {
+        "exists": true,
+        "file_count": 1,
+        "files": [
+          "replica_w2v.model"
+        ]
+      },
+      "data/replica_w2v/replica_w2v.model": {
+        "exists": true
+      },
+      "replica_configs.json": {
+        "exists": true
+      }
+    },
+    "vulnerability_analysis": {
+      "c": {
+        "status": "success",
+        "samples_analyzed": 4,
+        "vulnerabilities_detected": 0,
+        "vulnerable_lines_found": 1,
+        "report_path": "replica_analysis_c_report.txt"
+      },
+      "cpp": {
+        "status": "success",
+        "samples_analyzed": 3,
+        "vulnerabilities_detected": 0,
+        "vulnerable_lines_found": 1,
+        "report_path": "replica_analysis_cpp_report.txt"
+      },
+      "python": {
+        "status": "success",
+        "samples_analyzed": 3,
+        "vulnerabilities_detected": 0,
+        "vulnerable_lines_found": 5,
+        "report_path": "replica_analysis_python_report.txt"
+      },
+      "java": {
+        "status": "success",
+        "samples_analyzed": 3,
+        "vulnerabilities_detected": 0,
+        "vulnerable_lines_found": 5,
+        "report_path": "replica_analysis_java_report.txt"
+      }
+    },
+    "format_compatibility": {
+      "status": "success",
+      "vulnerable_lines_detected": 0,
+      "risk_score": 0.0
+    }
+  }
+}

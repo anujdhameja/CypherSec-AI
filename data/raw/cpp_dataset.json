@@ -1,0 +1,16 @@
+[
+  {
+    "project": "FFmpeg",
+    "commit_id": "ml-cpp-0001",
+    "language": "cpp",
+    "func": "#include <cstring>\nint add(int a, int b) { return a + b; }",
+    "target": 0
+  },
+  {
+    "project": "FFmpeg",
+    "commit_id": "ml-cpp-0002",
+    "language": "cpp",
+    "func": "#include <cstring>\nvoid copy(char *s){ char buf[8]; std::strcpy(buf, s); }",
+    "target": 0
+  }
+]

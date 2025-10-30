@@ -1,0 +1,16 @@
+[
+  {
+    "project": "FFmpeg",
+    "commit_id": "ml-java-0001",
+    "language": "java",
+    "func": "public class Calculator { public static int fibonacci(int n) { if (n <= 1) return n; return fibonacci(n-1) + fibonacci(n-2); } }",
+    "target": 0
+  },
+  {
+    "project": "FFmpeg",
+    "commit_id": "ml-java-0002",
+    "language": "java",
+    "func": "import java.sql.*; public class DatabaseQuery { public void executeQuery(String userInput) { String sql = \"SELECT * FROM users WHERE name = '\" + userInput + \"'\"; Statement stmt = connection.createStatement(); ResultSet rs = stmt.executeQuery(sql); } }",
+    "target": 1
+  }
+]

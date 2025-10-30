@@ -97,12 +97,31 @@ def tokenize(data_frame: pd.DataFrame):
 
 def to_files(data_frame: pd.DataFrame, out_path):
     # path = f"{self.out_path}/{self.dataset_name}/"
-    os.makedirs(out_path)
+    os.makedirs(out_path, exist_ok=True)
 
     for idx, row in data_frame.iterrows():
-        file_name = f"{idx}.c"
+        # Determine file extension based on optional 'language' column
+        lang = None
+        try:
+            lang = row.language if 'language' in data_frame.columns else None
+        except Exception:
+            lang = None
+        ext_map = {
+            'c': '.c',
+            'cpp': '.cpp',
+            'csharp': '.cs',
+            'python': '.py',
+            'java': '.java',
+            'php': '.php'
+        }
+        file_ext = ext_map.get(str(lang).lower(), '.c')
+        file_name = f"{idx}{file_ext}"
         with open(out_path + file_name, 'w') as f:
-            f.write(row.func)
+            if isinstance(row.func, dict):
+                code_str = row.func.get('function', '')
+            else:
+                code_str = str(row.func)
+            f.write(code_str)
 
 
 def create_with_index(data, columns):
@@ -181,5 +200,74 @@ def drop(data_frame: pd.DataFrame, keys):
 
 
 def slice_frame(data_frame: pd.DataFrame, size: int):
+    """Original slicing function - kept for backward compatibility"""
     data_frame_size = len(data_frame)
     return data_frame.groupby(np.arange(data_frame_size) // size)
+
+
+def smart_language_aware_slice(data_frame: pd.DataFrame, max_size: int):
+    """
+    Smart slicing that respects language boundaries and size limits
+    
+    Parameters:
+    - data_frame: Input dataframe with optional 'language' column
+    - max_size: Maximum samples per batch (from slice_size config)
+    
+    Returns:
+    - List of (batch_id, batch_dataframe, language) tuples for multi-language
+    - List of (batch_id, batch_dataframe, None) tuples for single-language (backward compatibility)
+    """
+    
+    # Check if this is a multi-language dataset
+    if 'language' not in data_frame.columns:
+        print("📋 Single-language dataset detected - using standard slicing")
+        # Fallback to original slicing for non-multilang datasets
+        original_slices = slice_frame(data_frame, max_size)
+        batches = []
+        for batch_id, batch_df in original_slices:
+            batches.append((batch_id, batch_df, None))  # None indicates no specific language
+        return batches
+    
+    print("🌍 Multi-language dataset detected - using smart language-aware slicing")
+    
+    batches = []
+    current_batch_data = []
+    current_language = None
+    batch_id = 0
+    
+    for idx, row in data_frame.iterrows():
+        row_language = row['language']
+        
+        # Check termination conditions
+        should_terminate_batch = (
+            len(current_batch_data) >= max_size or  # Size limit reached
+            (current_language is not None and row_language != current_language)  # Language changed
+        )
+        
+        if should_terminate_batch and current_batch_data:
+            # Save current batch
+            batch_df = pd.DataFrame(current_batch_data)
+            batch_df.index = range(len(batch_df))  # Reset index for consistency
+            batches.append((batch_id, batch_df, current_language))
+            
+            print(f"📦 Batch {batch_id}: {len(batch_df)} {current_language} samples")
+            batch_id += 1
+            
+            # Start new batch
+            current_batch_data = [row.to_dict()]
+            current_language = row_language
+        else:
+            # Add to current batch
+            current_batch_data.append(row.to_dict())
+            if current_language is None:
+                current_language = row_language
+    
+    # Don't forget the last batch
+    if current_batch_data:
+        batch_df = pd.DataFrame(current_batch_data)
+        batch_df.index = range(len(batch_df))  # Reset index for consistency
+        batches.append((batch_id, batch_df, current_language))
+        print(f"📦 Batch {batch_id}: {len(batch_df)} {current_language} samples")
+    
+    print(f"✅ Created {len(batches)} language-aware batches")
+    return batches

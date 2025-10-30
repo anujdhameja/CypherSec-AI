@@ -37,7 +37,7 @@
   },
   "create": {
     "filter_column_value": {
-      "project": "qemu"
+      "project": "FFmpeg"
     },
     "slice_size": 100,
     "joern_cli_dir": "joern/joern-cli/"
@@ -52,7 +52,7 @@
     "w2v": "data/w2v/"
   },
   "files": {
-    "raw": "dataset.json",
+    "raw": "test_multilang_sorted.json",
     "cpg": "cpg",
     "tokens": "tokens.pkl",
     "w2v": "w2v.model",

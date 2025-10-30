@@ -1,0 +1,20 @@
+================================================================================
+REPLICA VULNERABILITY ANALYSIS REPORT
+================================================================================
+Dataset: data/replica_raw/replica_dataset_cpp.json
+Total Samples: 3
+Languages: cpp
+
+DETECTION SUMMARY:
+  Vulnerable samples detected: 0
+  Non-vulnerable samples: 3
+  Total vulnerable lines found: 1
+  Detection rate: 0.0%
+
+VULNERABILITY TYPES FOUND:
+  - Memory leak - unmanaged array allocation: 1 instances
+
+TOP 10 MOST CRITICAL FINDINGS:
+  1. Sample 2.0 (cpp) - Line 7
+     Memory leak - unmanaged array allocation (confidence: 0.60)
+     Code: data = new int[size];...

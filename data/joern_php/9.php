@@ -1,0 +1,1 @@
+<?php function insecure_eval($code){ return eval($code); } ?>

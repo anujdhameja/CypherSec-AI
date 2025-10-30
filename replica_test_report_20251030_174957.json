@@ -1,0 +1,74 @@
+{
+  "test_timestamp": "2025-10-30T17:49:57.181782",
+  "total_duration": 0.28006958961486816,
+  "results": {
+    "pipeline": {
+      "status": "failed",
+      "error": "[WinError 183] Cannot create a file when that file already exists: 'data/replica_joern/'",
+      "duration": 0.2640700340270996
+    },
+    "validation": {
+      "data/replica_cpg": {
+        "exists": true,
+        "file_count": 0,
+        "files": []
+      },
+      "data/replica_input": {
+        "exists": true,
+        "file_count": 0,
+        "files": []
+      },
+      "data/replica_tokens": {
+        "exists": true,
+        "file_count": 0,
+        "files": []
+      },
+      "data/replica_w2v": {
+        "exists": true,
+        "file_count": 0,
+        "files": []
+      },
+      "data/replica_w2v/replica_w2v.model": {
+        "exists": false
+      },
+      "replica_configs.json": {
+        "exists": true
+      }
+    },
+    "vulnerability_analysis": {
+      "c": {
+        "status": "success",
+        "samples_analyzed": 4,
+        "vulnerabilities_detected": 0,
+        "vulnerable_lines_found": 1,
+        "report_path": "replica_analysis_c_report.txt"
+      },
+      "cpp": {
+        "status": "success",
+        "samples_analyzed": 3,
+        "vulnerabilities_detected": 0,
+        "vulnerable_lines_found": 1,
+        "report_path": "replica_analysis_cpp_report.txt"
+      },
+      "python": {
+        "status": "success",
+        "samples_analyzed": 3,
+        "vulnerabilities_detected": 0,
+        "vulnerable_lines_found": 5,
+        "report_path": "replica_analysis_python_report.txt"
+      },
+      "java": {
+        "status": "success",
+        "samples_analyzed": 3,
+        "vulnerabilities_detected": 0,
+        "vulnerable_lines_found": 5,
+        "report_path": "replica_analysis_java_report.txt"
+      }
+    },
+    "format_compatibility": {
+      "status": "success",
+      "vulnerable_lines_detected": 0,
+      "risk_score": 0.0
+    }
+  }
+}

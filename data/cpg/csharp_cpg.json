@@ -1,0 +1,74 @@
+{
+"functions": [
+  {
+  "function": "Max",
+  "file": "2.cs",
+  "nodes": [
+    {"id": 107374182400, "label": "METHOD", "code": "public static int Max(int a, int b) { return a > b ? a : b; }"},
+    {"id": 111669149696, "label": "METHOD_PARAMETER_IN", "code": "int a"},
+    {"id": 111669149697, "label": "METHOD_PARAMETER_IN", "code": "int b"},
+    {"id": 25769803776, "label": "BLOCK", "code": "<empty>"},
+    {"id": 141733920768, "label": "RETURN", "code": "return a > b ? a : b;"},
+    {"id": 30064771072, "label": "CALL", "code": "a > b ? a : b"},
+    {"id": 30064771073, "label": "CALL", "code": "a > b"},
+    {"id": 68719476736, "label": "IDENTIFIER", "code": "int a"},
+    {"id": 68719476737, "label": "IDENTIFIER", "code": "int b"},
+    {"id": 68719476738, "label": "IDENTIFIER", "code": "int a"},
+    {"id": 68719476739, "label": "IDENTIFIER", "code": "int b"},
+    {"id": 128849018881, "label": "MODIFIER", "code": "<empty>"},
+    {"id": 128849018882, "label": "MODIFIER", "code": "<empty>"},
+    {"id": 124554051584, "label": "METHOD_RETURN", "code": "RET"}
+  ],
+  "edges": [
+    {"source": 107374182400, "target": 111669149696, "label": "AST"},
+    {"source": 107374182400, "target": 111669149697, "label": "AST"},
+    {"source": 107374182400, "target": 25769803776, "label": "AST"},
+    {"source": 107374182400, "target": 128849018881, "label": "AST"},
+    {"source": 107374182400, "target": 128849018882, "label": "AST"},
+    {"source": 107374182400, "target": 124554051584, "label": "AST"},
+    {"source": 25769803776, "target": 141733920768, "label": "AST"},
+    {"source": 141733920768, "target": 30064771072, "label": "AST"},
+    {"source": 30064771072, "target": 30064771073, "label": "AST"},
+    {"source": 30064771072, "target": 68719476738, "label": "AST"},
+    {"source": 30064771072, "target": 68719476739, "label": "AST"},
+    {"source": 30064771073, "target": 68719476736, "label": "AST"},
+    {"source": 30064771073, "target": 68719476737, "label": "AST"}
+  ]
+},
+  {
+  "function": "Unsafe",
+  "file": "3.cs",
+  "nodes": [
+    {"id": 107374182401, "label": "METHOD", "code": "public static int Unsafe(int n) { int[] a = new int[4]; return a[n]; }"},
+    {"id": 111669149698, "label": "METHOD_PARAMETER_IN", "code": "int n"},
+    {"id": 25769803777, "label": "BLOCK", "code": "<empty>"},
+    {"id": 30064771074, "label": "CALL", "code": "a = new int[4]"},
+    {"id": 68719476740, "label": "IDENTIFIER", "code": "a = new int[4]"},
+    {"id": 180388626432, "label": "UNKNOWN", "code": "new int[4]"},
+    {"id": 94489280512, "label": "LOCAL", "code": "a"},
+    {"id": 141733920769, "label": "RETURN", "code": "return a[n];"},
+    {"id": 30064771075, "label": "CALL", "code": "a[n]"},
+    {"id": 68719476741, "label": "IDENTIFIER", "code": "a"},
+    {"id": 68719476742, "label": "IDENTIFIER", "code": "int n"},
+    {"id": 128849018884, "label": "MODIFIER", "code": "<empty>"},
+    {"id": 128849018885, "label": "MODIFIER", "code": "<empty>"},
+    {"id": 124554051585, "label": "METHOD_RETURN", "code": "RET"}
+  ],
+  "edges": [
+    {"source": 107374182401, "target": 111669149698, "label": "AST"},
+    {"source": 107374182401, "target": 25769803777, "label": "AST"},
+    {"source": 107374182401, "target": 128849018884, "label": "AST"},
+    {"source": 107374182401, "target": 128849018885, "label": "AST"},
+    {"source": 107374182401, "target": 124554051585, "label": "AST"},
+    {"source": 25769803777, "target": 30064771074, "label": "AST"},
+    {"source": 25769803777, "target": 94489280512, "label": "AST"},
+    {"source": 25769803777, "target": 141733920769, "label": "AST"},
+    {"source": 30064771074, "target": 68719476740, "label": "AST"},
+    {"source": 30064771074, "target": 180388626432, "label": "AST"},
+    {"source": 141733920769, "target": 30064771075, "label": "AST"},
+    {"source": 30064771075, "target": 68719476741, "label": "AST"},
+    {"source": 30064771075, "target": 68719476742, "label": "AST"}
+  ]
+}
+]
+}

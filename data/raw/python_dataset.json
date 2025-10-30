@@ -1,0 +1,16 @@
+[
+  {
+    "project": "FFmpeg",
+    "commit_id": "ml-py-0001",
+    "language": "python",
+    "func": "def binary_search(arr, target):\n    left, right = 0, len(arr) - 1\n    while left <= right:\n        mid = (left + right) // 2\n        if arr[mid] == target:\n            return mid\n        elif arr[mid] < target:\n            left = mid + 1\n        else:\n            right = mid - 1\n    return -1",
+    "target": 0
+  },
+  {
+    "project": "FFmpeg",
+    "commit_id": "ml-py-0002",
+    "language": "python",
+    "func": "import subprocess\ndef execute_command(user_input):\n    command = f\"ls {user_input}\"\n    result = subprocess.call(command, shell=True)\n    return result",
+    "target": 1
+  }
+]

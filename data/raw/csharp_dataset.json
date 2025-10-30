@@ -1,0 +1,16 @@
+[
+  {
+    "project": "FFmpeg",
+    "commit_id": "ml-cs-0001",
+    "language": "csharp",
+    "func": "using System;\nusing System.Collections.Generic;\npublic class MergeSort {\n    public static List<int> Sort(List<int> list) {\n        if (list.Count <= 1) return list;\n        int mid = list.Count / 2;\n        var left = Sort(list.GetRange(0, mid));\n        var right = Sort(list.GetRange(mid, list.Count - mid));\n        return Merge(left, right);\n    }\n}",
+    "target": 0
+  },
+  {
+    "project": "FFmpeg",
+    "commit_id": "ml-cs-0002",
+    "language": "csharp",
+    "func": "using System;\nusing System.Diagnostics;\npublic class ProcessExecutor {\n    public static void RunCommand(string userCommand) {\n        ProcessStartInfo psi = new ProcessStartInfo();\n        psi.FileName = \"cmd.exe\";\n        psi.Arguments = \"/c \" + userCommand;\n        Process.Start(psi);\n    }\n}",
+    "target": 1
+  }
+]

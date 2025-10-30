@@ -1,0 +1,149 @@
+{
+"functions": [
+  {
+  "function": "add",
+  "file": "0.cpp",
+  "nodes": [
+    {"id": 107374182400, "label": "METHOD", "code": "int add(int a, int b) { return a + b; }"},
+    {"id": 111669149696, "label": "METHOD_PARAMETER_IN", "code": "int a"},
+    {"id": 111669149697, "label": "METHOD_PARAMETER_IN", "code": "int b"},
+    {"id": 25769803776, "label": "BLOCK", "code": "{ return a + b; }"},
+    {"id": 141733920768, "label": "RETURN", "code": "return a + b;"},
+    {"id": 30064771072, "label": "CALL", "code": "a + b"},
+    {"id": 68719476736, "label": "IDENTIFIER", "code": "a"},
+    {"id": 68719476737, "label": "IDENTIFIER", "code": "b"},
+    {"id": 124554051584, "label": "METHOD_RETURN", "code": "RET"}
+  ],
+  "edges": [
+    {"source": 107374182400, "target": 111669149696, "label": "AST"},
+    {"source": 107374182400, "target": 111669149697, "label": "AST"},
+    {"source": 107374182400, "target": 25769803776, "label": "AST"},
+    {"source": 107374182400, "target": 124554051584, "label": "AST"},
+    {"source": 25769803776, "target": 141733920768, "label": "AST"},
+    {"source": 141733920768, "target": 30064771072, "label": "AST"},
+    {"source": 30064771072, "target": 68719476736, "label": "AST"},
+    {"source": 30064771072, "target": 68719476737, "label": "AST"}
+  ]
+},
+  {
+  "function": "<global>",
+  "file": "0.cpp",
+  "nodes": [
+    {"id": 107374182401, "label": "METHOD", "code": "<global>"},
+    {"id": 107374182400, "label": "METHOD", "code": "int add(int a, int b) { return a + b; }"},
+    {"id": 111669149696, "label": "METHOD_PARAMETER_IN", "code": "int a"},
+    {"id": 111669149697, "label": "METHOD_PARAMETER_IN", "code": "int b"},
+    {"id": 25769803776, "label": "BLOCK", "code": "{ return a + b; }"},
+    {"id": 141733920768, "label": "RETURN", "code": "return a + b;"},
+    {"id": 30064771072, "label": "CALL", "code": "a + b"},
+    {"id": 68719476736, "label": "IDENTIFIER", "code": "a"},
+    {"id": 68719476737, "label": "IDENTIFIER", "code": "b"},
+    {"id": 124554051584, "label": "METHOD_RETURN", "code": "RET"},
+    {"id": 25769803777, "label": "BLOCK", "code": "<empty>"},
+    {"id": 120259084288, "label": "METHOD_REF", "code": "add"},
+    {"id": 124554051585, "label": "METHOD_RETURN", "code": "RET"}
+  ],
+  "edges": [
+    {"source": 107374182401, "target": 107374182400, "label": "AST"},
+    {"source": 107374182401, "target": 25769803777, "label": "AST"},
+    {"source": 107374182401, "target": 124554051585, "label": "AST"},
+    {"source": 107374182400, "target": 111669149696, "label": "AST"},
+    {"source": 107374182400, "target": 111669149697, "label": "AST"},
+    {"source": 107374182400, "target": 25769803776, "label": "AST"},
+    {"source": 107374182400, "target": 124554051584, "label": "AST"},
+    {"source": 25769803776, "target": 141733920768, "label": "AST"},
+    {"source": 141733920768, "target": 30064771072, "label": "AST"},
+    {"source": 30064771072, "target": 68719476736, "label": "AST"},
+    {"source": 30064771072, "target": 68719476737, "label": "AST"},
+    {"source": 25769803777, "target": 120259084288, "label": "AST"}
+  ]
+},
+  {
+  "function": "copy",
+  "file": "1.cpp",
+  "nodes": [
+    {"id": 107374182402, "label": "METHOD", "code": "void copy(char *s){ char buf[8]; std::strcpy(buf, s); }"},
+    {"id": 111669149698, "label": "METHOD_PARAMETER_IN", "code": "char *s"},
+    {"id": 25769803778, "label": "BLOCK", "code": "{ char buf[8]; std::strcpy(buf, s); }"},
+    {"id": 94489280512, "label": "LOCAL", "code": "char buf[8]"},
+    {"id": 30064771073, "label": "CALL", "code": "buf[8]"},
+    {"id": 68719476738, "label": "IDENTIFIER", "code": "buf"},
+    {"id": 30064771074, "label": "CALL", "code": "buf[8]"},
+    {"id": 68719476739, "label": "IDENTIFIER", "code": "char[8]"},
+    {"id": 90194313216, "label": "LITERAL", "code": "8"},
+    {"id": 30064771075, "label": "CALL", "code": "std::strcpy(buf, s)"},
+    {"id": 68719476740, "label": "IDENTIFIER", "code": "buf"},
+    {"id": 68719476741, "label": "IDENTIFIER", "code": "s"},
+    {"id": 124554051586, "label": "METHOD_RETURN", "code": "RET"}
+  ],
+  "edges": [
+    {"source": 107374182402, "target": 111669149698, "label": "AST"},
+    {"source": 107374182402, "target": 25769803778, "label": "AST"},
+    {"source": 107374182402, "target": 124554051586, "label": "AST"},
+    {"source": 25769803778, "target": 94489280512, "label": "AST"},
+    {"source": 25769803778, "target": 30064771073, "label": "AST"},
+    {"source": 25769803778, "target": 30064771075, "label": "AST"},
+    {"source": 30064771073, "target": 68719476738, "label": "AST"},
+    {"source": 30064771073, "target": 30064771074, "label": "AST"},
+    {"source": 30064771074, "target": 68719476739, "label": "AST"},
+    {"source": 30064771074, "target": 90194313216, "label": "AST"},
+    {"source": 30064771075, "target": 68719476740, "label": "AST"},
+    {"source": 30064771075, "target": 68719476741, "label": "AST"}
+  ]
+},
+  {
+  "function": "<global>",
+  "file": "1.cpp",
+  "nodes": [
+    {"id": 107374182403, "label": "METHOD", "code": "<global>"},
+    {"id": 107374182402, "label": "METHOD", "code": "void copy(char *s){ char buf[8]; std::strcpy(buf, s); }"},
+    {"id": 111669149698, "label": "METHOD_PARAMETER_IN", "code": "char *s"},
+    {"id": 25769803778, "label": "BLOCK", "code": "{ char buf[8]; std::strcpy(buf, s); }"},
+    {"id": 94489280512, "label": "LOCAL", "code": "char buf[8]"},
+    {"id": 30064771073, "label": "CALL", "code": "buf[8]"},
+    {"id": 68719476738, "label": "IDENTIFIER", "code": "buf"},
+    {"id": 30064771074, "label": "CALL", "code": "buf[8]"},
+    {"id": 68719476739, "label": "IDENTIFIER", "code": "char[8]"},
+    {"id": 90194313216, "label": "LITERAL", "code": "8"},
+    {"id": 30064771075, "label": "CALL", "code": "std::strcpy(buf, s)"},
+    {"id": 68719476740, "label": "IDENTIFIER", "code": "buf"},
+    {"id": 68719476741, "label": "IDENTIFIER", "code": "s"},
+    {"id": 124554051586, "label": "METHOD_RETURN", "code": "RET"},
+    {"id": 25769803779, "label": "BLOCK", "code": "<empty>"},
+    {"id": 120259084289, "label": "METHOD_REF", "code": "copy"},
+    {"id": 124554051587, "label": "METHOD_RETURN", "code": "RET"}
+  ],
+  "edges": [
+    {"source": 107374182403, "target": 107374182402, "label": "AST"},
+    {"source": 107374182403, "target": 25769803779, "label": "AST"},
+    {"source": 107374182403, "target": 124554051587, "label": "AST"},
+    {"source": 107374182402, "target": 111669149698, "label": "AST"},
+    {"source": 107374182402, "target": 25769803778, "label": "AST"},
+    {"source": 107374182402, "target": 124554051586, "label": "AST"},
+    {"source": 25769803778, "target": 94489280512, "label": "AST"},
+    {"source": 25769803778, "target": 30064771073, "label": "AST"},
+    {"source": 25769803778, "target": 30064771075, "label": "AST"},
+    {"source": 30064771073, "target": 68719476738, "label": "AST"},
+    {"source": 30064771073, "target": 30064771074, "label": "AST"},
+    {"source": 30064771074, "target": 68719476739, "label": "AST"},
+    {"source": 30064771074, "target": 90194313216, "label": "AST"},
+    {"source": 30064771075, "target": 68719476740, "label": "AST"},
+    {"source": 30064771075, "target": 68719476741, "label": "AST"},
+    {"source": 25769803779, "target": 120259084289, "label": "AST"}
+  ]
+},
+  {
+  "function": "<global>",
+  "file": "<includes>",
+  "nodes": [
+    {"id": 107374182404, "label": "METHOD", "code": "<global>"},
+    {"id": 25769803780, "label": "BLOCK", "code": "<empty>"},
+    {"id": 124554051588, "label": "METHOD_RETURN", "code": "RET"}
+  ],
+  "edges": [
+    {"source": 107374182404, "target": 25769803780, "label": "AST"},
+    {"source": 107374182404, "target": 124554051588, "label": "AST"}
+  ]
+}
+]
+}

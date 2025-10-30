@@ -1,0 +1,72 @@
+[
+  {
+    "project": "FFmpeg",
+    "commit_id": "ml-cpp-0001",
+    "language": "cpp",
+    "func": "#include <cstring>\nint add(int a, int b) { return a + b; }",
+    "target": 0
+  },
+  {
+    "project": "FFmpeg",
+    "commit_id": "ml-cpp-0002",
+    "language": "cpp",
+    "func": "#include <cstring>\nvoid copy(char *s){ char buf[8]; std::strcpy(buf, s); }",
+    "target": 0
+  },
+  {
+    "project": "FFmpeg",
+    "commit_id": "ml-cs-0001",
+    "language": "csharp",
+    "func": "using System;\nclass Program { public static int Max(int a, int b) { return a > b ? a : b; } }",
+    "target": 1
+  },
+  {
+    "project": "FFmpeg",
+    "commit_id": "ml-cs-0002",
+    "language": "csharp",
+    "func": "using System;\nclass Program { public static int Unsafe(int n) { int[] a = new int[4]; return a[n]; } }",
+    "target": 1
+  },
+  {
+    "project": "FFmpeg",
+    "commit_id": "ml-py-0001",
+    "language": "python",
+    "func": "def add(a, b):\n    return a + b\n",
+    "target": 0
+  },
+  {
+    "project": "FFmpeg",
+    "commit_id": "ml-py-0002",
+    "language": "python",
+    "func": "def insecure_eval(code):\n    return eval(code)\n",
+    "target": 1
+  },
+  {
+    "project": "FFmpeg",
+    "commit_id": "ml-java-0001",
+    "language": "java",
+    "func": "class Main { static int mul(int a, int b){ return a*b; } }",
+    "target": 0
+  },
+  {
+    "project": "FFmpeg",
+    "commit_id": "ml-java-0002",
+    "language": "java",
+    "func": "class Main { static void copy(String s){ char[] t = new char[4]; s.getChars(0, Math.min(s.length(), 4), t, 0); } }",
+    "target": 1
+  },
+  {
+    "project": "FFmpeg",
+    "commit_id": "ml-php-0001",
+    "language": "php",
+    "func": "<?php function sub($a, $b){ return $a - $b; } ?>",
+    "target": 0
+  },
+  {
+    "project": "FFmpeg",
+    "commit_id": "ml-php-0002",
+    "language": "php",
+    "func": "<?php function insecure_eval($code){ return eval($code); } ?>",
+    "target": 0
+  }
+]

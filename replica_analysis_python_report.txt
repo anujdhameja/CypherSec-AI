@@ -1,0 +1,31 @@
+================================================================================
+REPLICA VULNERABILITY ANALYSIS REPORT
+================================================================================
+Dataset: data/replica_raw/replica_dataset_python.json
+Total Samples: 3
+Languages: python
+
+DETECTION SUMMARY:
+  Vulnerable samples detected: 0
+  Non-vulnerable samples: 3
+  Total vulnerable lines found: 5
+  Detection rate: 0.0%
+
+VULNERABILITY TYPES FOUND:
+  - Code injection - unsafe eval: 2 instances
+  - Code injection - unsafe exec: 1 instances
+  - Command injection - unsafe system call: 1 instances
+  - Deserialization vulnerability: 1 instances
+
+TOP 10 MOST CRITICAL FINDINGS:
+  1. Sample 1.0 (python) - Line 6
+     Command injection - unsafe system call (confidence: 0.60)
+     Code: os.system(user_input)...
+
+  2. Sample 2.0 (python) - Line 3
+     Code injection - unsafe eval (confidence: 0.60)
+     Code: result = eval(expr)...
+
+  3. Sample 3.0 (python) - Line 8
+     Code injection - unsafe eval (confidence: 0.60)
+     Code: return ast.literal_eval(expr)...

@@ -1,0 +1,55 @@
+================================================================================
+REPLICA VULNERABILITY DETECTION PIPELINE TEST REPORT
+================================================================================
+Test Date: 2025-10-30 18:01:03
+Total Duration: 34.8 seconds
+
+PIPELINE TEST RESULTS:
+  Status: FAILED
+  Duration: 34.7s
+  Error: [Errno 2] No such file or directory: 'data/replica_cpg/replica_0_replica_cpg.json'
+
+VULNERABILITY ANALYSIS RESULTS:
+  C:
+    Status: SUCCESS
+    Samples: 4
+    Vulnerabilities: 0
+    Vulnerable Lines: 1
+  CPP:
+    Status: SUCCESS
+    Samples: 3
+    Vulnerabilities: 0
+    Vulnerable Lines: 1
+  PYTHON:
+    Status: SUCCESS
+    Samples: 3
+    Vulnerabilities: 0
+    Vulnerable Lines: 5
+  JAVA:
+    Status: SUCCESS
+    Samples: 3
+    Vulnerabilities: 0
+    Vulnerable Lines: 5
+
+OUTPUT VALIDATION:
+  ✅ data/replica_cpg
+      Files: 1
+  ✅ data/replica_input
+      Files: 0
+  ✅ data/replica_tokens
+      Files: 0
+  ✅ data/replica_w2v
+      Files: 0
+  ❌ data/replica_w2v/replica_w2v.model
+  ✅ replica_configs.json
+
+FORMAT COMPATIBILITY:
+  Status: SUCCESS
+  Vulnerable Lines: 0
+  Risk Score: 0.00
+
+OVERALL ASSESSMENT:
+  ⚠️  ISSUES DETECTED - REVIEW BEFORE DEPLOYMENT
+    ❌ Pipeline test failed
+
+================================================================================

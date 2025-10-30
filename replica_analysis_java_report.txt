@@ -1,0 +1,27 @@
+================================================================================
+REPLICA VULNERABILITY ANALYSIS REPORT
+================================================================================
+Dataset: data/replica_raw/replica_dataset_java.json
+Total Samples: 3
+Languages: java
+
+DETECTION SUMMARY:
+  Vulnerable samples detected: 0
+  Non-vulnerable samples: 3
+  Total vulnerable lines found: 5
+  Detection rate: 0.0%
+
+VULNERABILITY TYPES FOUND:
+  - Command injection - Runtime.exec: 1 instances
+  - Reflection vulnerability: 1 instances
+  - SQL injection - string concatenation in query: 1 instances
+  - SQL injection - unsafe statement: 2 instances
+
+TOP 10 MOST CRITICAL FINDINGS:
+  1. Sample 1.0 (java) - Line 8
+     SQL injection - unsafe statement (confidence: 0.60)
+     Code: Statement stmt = conn.createStatement();...
+
+  2. Sample 2.0 (java) - Line 8
+     Command injection - Runtime.exec (confidence: 0.60)
+     Code: Runtime.getRuntime().exec(command);...

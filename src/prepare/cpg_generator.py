@@ -373,14 +373,85 @@ def graph_indexing(graph):
 # -------------------------------------------------
 # 3️⃣  Run Joern Parse (generate .bin)
 # -------------------------------------------------
-def joern_parse(joern_path, input_path, output_path, file_name):
+def joern_parse(joern_path, input_path, output_path, file_name, language=None):
+    """
+    Parse code using language-specific Joern frontend
+    """
     out_file = file_name + ".bin"
     abs_input_path = os.path.abspath(input_path)
     abs_output_path = os.path.abspath(os.path.join(output_path, out_file))
-    command = ["joern-parse.bat", abs_input_path, "--output", abs_output_path]
-    subprocess.run(command, cwd=joern_path, shell=True, check=True)
-    print(f"✅ Parsed {input_path} → {out_file}")
-    return out_file
+    
+    # Detect language from files in input_path if not provided
+    if language is None:
+        language = detect_language_from_files(input_path)
+    
+    # Map language to appropriate Joern frontend
+    frontend_map = {
+        'c': 'c2cpg.bat',
+        'cpp': 'c2cpg.bat',
+        'csharp': 'csharpsrc2cpg.bat',
+        'python': 'pysrc2cpg.bat',
+        'java': 'javasrc2cpg.bat',
+        'php': 'php2cpg.bat',
+        'javascript': 'jssrc2cpg.bat'
+    }
+    
+    frontend = frontend_map.get(language, 'joern-parse.bat')
+    
+    print(f"🔄 Using {frontend} for language: {language}")
+    
+    if frontend == 'joern-parse.bat':
+        # Generic parser
+        command = [frontend, abs_input_path, "--output", abs_output_path]
+    else:
+        # Language-specific parser
+        command = [frontend, abs_input_path, "-o", abs_output_path]
+    
+    try:
+        subprocess.run(command, cwd=joern_path, shell=True, check=True)
+        print(f"✅ Parsed {input_path} → {out_file} using {frontend}")
+        return out_file
+    except subprocess.CalledProcessError as e:
+        print(f"❌ Error parsing with {frontend}: {e}")
+        # Fallback to generic parser
+        print(f"🔄 Falling back to generic joern-parse.bat")
+        command = ["joern-parse.bat", abs_input_path, "--output", abs_output_path]
+        subprocess.run(command, cwd=joern_path, shell=True, check=True)
+        print(f"✅ Parsed {input_path} → {out_file} using fallback")
+        return out_file
+
+
+def detect_language_from_files(input_path):
+    """
+    Detect programming language from file extensions in the directory
+    """
+    import os
+    
+    extensions = []
+    for file in os.listdir(input_path):
+        if os.path.isfile(os.path.join(input_path, file)):
+            _, ext = os.path.splitext(file)
+            extensions.append(ext.lower())
+    
+    # Map extensions to languages
+    ext_to_lang = {
+        '.c': 'c',
+        '.cpp': 'cpp',
+        '.cxx': 'cpp',
+        '.cc': 'cpp',
+        '.cs': 'csharp',
+        '.py': 'python',
+        '.java': 'java',
+        '.php': 'php',
+        '.js': 'javascript'
+    }
+    
+    # Find the most common language
+    for ext in extensions:
+        if ext in ext_to_lang:
+            return ext_to_lang[ext]
+    
+    return 'c'  # Default fallback
 
 
 # -------------------------------------------------

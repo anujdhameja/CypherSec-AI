@@ -46,47 +46,160 @@ def select(dataset):
 def create_task():
     context = configs.Create()
     raw = data.read(PATHS.raw, FILES.raw)
-    filtered = data.apply_filter(raw, select)
-    filtered = data.clean(filtered) #removes duplicates
-    data.drop(filtered, ["commit_id", "project"]) #drops the commit_id and project columns
-    slices = data.slice_frame(filtered, context.slice_size) #calls the function in datamanager.py it is dividing
-    #find out about context?   so the size of slicing is 100
-    slices = [(s, slice.apply(lambda x: x)) for s, slice in slices]
-    # Creates list of (slice_number, slice_dataframe) tuples
-    #create CPG files
-    cpg_files = []
-    # Create CPG binary files
-    for s, slice in slices:
-        data.to_files(slice, PATHS.joern)
-        #something is wrong here bcz no .c files are created?
-        cpg_file = prepare.joern_parse(context.joern_cli_dir, PATHS.joern, PATHS.cpg, f"{s}_{FILES.cpg}")
-        print("CPG file created:", cpg_file)
-        cpg_files.append(cpg_file)
-        print(f"Dataset {s} to cpg.")
-        #deleting the joern files is not a good idea bcz it is not deleting the .c files?
-        shutil.rmtree(PATHS.joern)   # delete joern files
-    # Create CPG with graphs json files
-    # json_files = prepare.joern_create(context.joern_cli_dir, PATHS.cpg, PATHS.cpg, cpg_files)
-    # for (s, slice), json_file in zip(slices, json_files):
-    #     graphs = prepare.json_process(PATHS.cpg, json_file)
-    json_files = prepare.joern_create(context.joern_cli_dir, PATHS.cpg, PATHS.cpg, cpg_files)
-    print("JSON files returned:", json_files)
-    print("DEBUG: joern_create returned ->", json_files)
-    #not understoood what is happening here?
-    for (s, slice), json_file in zip(slices, json_files):
-        graphs = prepare.json_process(PATHS.cpg, json_file)
-        # print("Graphs processed:", graphs)
-        #not understoood what is happening here?
-        if graphs is None:
-            print(f"Dataset chunk {s} not processed.")
-            continue
-        #find out about these indexes?
-        dataset = data.create_with_index(graphs, ["Index", "cpg"])
-        dataset = data.inner_join_by_index(slice, dataset)
-        print(f"Writing cpg dataset chunk {s}.")
-        data.write(dataset, PATHS.cpg, f"{s}_{FILES.cpg}.pkl")
-        del dataset
-        gc.collect()
+    
+    # Check if this is a language-specific dataset
+    if 'language' in raw.columns:
+        print("🔄 Processing language-specific dataset")
+        language = raw['language'].iloc[0] if len(raw) > 0 else 'c'
+        print(f"📋 Detected language: {language}")
+        
+        # Apply basic filtering but keep language info
+        filtered = data.apply_filter(raw, select)
+        filtered = data.clean(filtered) #removes duplicates
+        
+        # Don't drop language column for multi-language support
+        columns_to_drop = ["commit_id", "project"]
+        existing_columns = [col for col in columns_to_drop if col in filtered.columns]
+        if existing_columns:
+            data.drop(filtered, existing_columns)
+        
+        # Use smart language-aware slicing
+        print(f"📋 Dataset size: {len(filtered)} samples")
+        slices = data.smart_language_aware_slice(filtered, context.slice_size)
+        
+        # Note: smart_language_aware_slice returns (batch_id, batch_df, language) tuples
+        # No need for the lambda transformation - already returns proper format
+        
+        cpg_files = []
+        
+        # Create CPG binary files with language-specific frontend
+        for slice_id, slice_df, slice_language in slices:
+            print(f"\n🔄 Processing batch {slice_id}: {len(slice_df)} samples")
+            if slice_language:
+                print(f"📋 Language: {slice_language}")
+            
+            # Create files with appropriate extensions
+            data.to_files(slice_df, PATHS.joern)
+            
+            # Use language-specific Joern frontend
+            # Use detected language from slice, fallback to original detection if None
+            frontend_language = slice_language if slice_language else language
+            cpg_file = prepare.joern_parse(
+                context.joern_cli_dir, 
+                PATHS.joern, 
+                PATHS.cpg, 
+                f"{slice_id}_{FILES.cpg}",
+                language=frontend_language
+            )
+            
+            print(f"✅ CPG file created: {cpg_file}")
+            cpg_files.append(cpg_file)
+            print(f"📋 Dataset batch {slice_id} converted to CPG")
+            
+            # Clean up joern files
+            if os.path.exists(PATHS.joern):
+                shutil.rmtree(PATHS.joern)
+        
+        # Create JSON files from CPG
+        print(f"\n🔄 Creating JSON files from {len(cpg_files)} CPG files")
+        json_files = prepare.joern_create(context.joern_cli_dir, PATHS.cpg, PATHS.cpg, cpg_files)
+        print(f"📋 JSON files created: {json_files}")
+        
+        # Process JSON files to create final datasets
+        for (slice_id, slice_df, slice_language), json_file in zip(slices, json_files):
+            if json_file is None:
+                print(f"❌ No JSON file for batch {slice_id}")
+                continue
+                
+            print(f"\n🔄 Processing JSON file: {json_file}")
+            graphs = prepare.json_process(PATHS.cpg, json_file)
+            
+            if graphs is None or len(graphs) == 0:
+                print(f"❌ No graphs generated from {json_file}")
+                continue
+            
+            print(f"✅ Generated {len(graphs)} graphs from {json_file}")
+            
+            # Apply universal index fix for proper joining
+            num_original = len(slice_df)
+            graphs_to_use = graphs[:num_original]  # Take first N graphs to match original
+            
+            # Force sequential indices for proper joining
+            for i, graph in enumerate(graphs_to_use):
+                graph['Index'] = i
+            
+            # Create dataset with CPG
+            dataset = data.create_with_index(graphs_to_use, ["Index", "cpg"])
+            dataset.index = list(range(len(dataset)))  # Force sequential DataFrame index
+            
+            # Ensure slice_df has matching index
+            slice_df.index = list(range(len(slice_df)))
+            
+            # Join with original slice data
+            final_dataset = data.inner_join_by_index(slice_df, dataset)
+            
+            # Fallback join if inner_join fails
+            if len(final_dataset) == 0:
+                print(f"⚠️  Inner join failed, using direct concatenation")
+                final_dataset = pd.concat([slice_df.reset_index(drop=True), 
+                                         dataset.reset_index(drop=True)], axis=1)
+            
+            print(f"📋 Final dataset size: {len(final_dataset)}")
+            print(f"📋 Columns: {list(final_dataset.columns)}")
+            
+            # Save the dataset
+            output_file = f"{slice_id}_{FILES.cpg}.pkl"
+            data.write(final_dataset, PATHS.cpg, output_file)
+            print(f"✅ Saved: {output_file}")
+            
+            # Show sample
+            if len(final_dataset) > 0:
+                sample = final_dataset.iloc[0]
+                target_label = "VULNERABLE" if sample.get('target') == 1 else "SAFE"
+                lang = sample.get('language', slice_language or 'N/A')
+                print(f"📋 Sample: [{target_label}] Language: {lang}")
+            
+            del dataset, final_dataset
+            gc.collect()
+            
+    else:
+        # Original pipeline for non-language-specific datasets
+        print("🔄 Processing original dataset format")
+        filtered = data.apply_filter(raw, select)
+        filtered = data.clean(filtered)
+        data.drop(filtered, ["commit_id", "project"])
+        # Use smart slicing (will fallback to original for non-multilang datasets)
+        slices = data.smart_language_aware_slice(filtered, context.slice_size)
+        
+        # Convert to old format for backward compatibility with original pipeline
+        converted_slices = []
+        for slice_id, slice_df, slice_language in slices:
+            converted_slices.append((slice_id, slice_df.apply(lambda x: x)))
+        slices = converted_slices
+        
+        cpg_files = []
+        for s, slice in slices:
+            data.to_files(slice, PATHS.joern)
+            cpg_file = prepare.joern_parse(context.joern_cli_dir, PATHS.joern, PATHS.cpg, f"{s}_{FILES.cpg}")
+            print("CPG file created:", cpg_file)
+            cpg_files.append(cpg_file)
+            print(f"Dataset {s} to cpg.")
+            shutil.rmtree(PATHS.joern)
+        
+        json_files = prepare.joern_create(context.joern_cli_dir, PATHS.cpg, PATHS.cpg, cpg_files)
+        print("JSON files returned:", json_files)
+        
+        for (s, slice), json_file in zip(slices, json_files):
+            graphs = prepare.json_process(PATHS.cpg, json_file)
+            if graphs is None:
+                print(f"Dataset chunk {s} not processed.")
+                continue
+            dataset = data.create_with_index(graphs, ["Index", "cpg"])
+            dataset = data.inner_join_by_index(slice, dataset)
+            print(f"Writing cpg dataset chunk {s}.")
+            data.write(dataset, PATHS.cpg, f"{s}_{FILES.cpg}.pkl")
+            del dataset
+            gc.collect()
 
 
 
