@@ -1,0 +1,52 @@
+{
+  "distributed": {
+    "backend": "nccl",
+    "init_method": "tcp://",
+    "world_size": 2,
+    "timeout_minutes": 30,
+    "find_unused_parameters": false
+  },
+  "memory_optimization": {
+    "gradient_accumulation_steps": 8,
+    "max_memory_gb": 14,
+    "use_mixed_precision": true,
+    "pin_memory": false,
+    "num_workers": 2,
+    "persistent_workers": false
+  },
+  "model_optimization": {
+    "use_simple_model": true,
+    "reduced_hidden_dim": 128,
+    "reduced_gnn_steps": 4,
+    "reduced_batch_size": 8,
+    "checkpoint_frequency": 10
+  },
+  "network": {
+    "master_port": "12355",
+    "timeout_seconds": 1800,
+    "retry_attempts": 3
+  },
+  "machines": [
+    {
+      "id": "machine_1",
+      "ip": "192.168.1.100",
+      "rank": 0,
+      "role": "master",
+      "gpu_count": 1,
+      "ram_gb": 16
+    },
+    {
+      "id": "machine_2", 
+      "ip": "192.168.1.101",
+      "rank": 1,
+      "role": "worker",
+      "gpu_count": 1,
+      "ram_gb": 16
+    }
+  ],
+  "data_distribution": {
+    "strategy": "split_by_rank",
+    "shuffle_before_split": true,
+    "validation_on_master_only": true
+  }
+}
